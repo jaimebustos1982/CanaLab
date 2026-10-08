@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17261A">
+<meta name="description" content="CañaLab: biorrefinería virtual de caña de azúcar a escala industrial, con líneas de azúcar morena y blanca empacada, cogeneración y bioetanol anhidro. Programa de Ingeniería Agroindustrial, Universidad Surcolombiana.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>[hidden]{display:none!important}html,body{margin:0}</style>
+<title>CañaLab · Biorrefinería de caña</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
+<style>
+:root{
+ --bg:#0f1a12;--panel:#14231a;--panel2:#1b2f22;--line:#2c4634;--ink:#eef3e8;--mute:#a9b9a6;
+ --cane:#7bb342;--sugar:#e8a93a;--brown:#9a5b2a;--etoh:#4a9bd6;--bad:#e05a47;--good:#5cc27a;--warn:#e8c33a;
+ --font:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:8px;padding:7px 12px}
+button:hover{border-color:var(--cane)}
+button.pri{background:var(--cane);color:#10200f;border-color:var(--cane);font-weight:700}
+button.pri:disabled{background:#3a4a3a;color:#8a9a88;border-color:#3a4a3a;cursor:not-allowed}
+button.ghost{background:transparent}
+input,select{font:inherit;color:var(--ink);background:#0d1710;border:1px solid var(--line);border-radius:7px;padding:7px 9px}
+input:focus,select:focus{outline:2px solid var(--cane);outline-offset:0}
+#view{position:fixed;inset:0;width:100%;height:100%;display:block}
+.top{position:fixed;left:0;right:0;top:0;height:52px;display:flex;align-items:center;gap:12px;padding:0 14px;background:linear-gradient(#0c160ff2,#0c160fcc);border-bottom:1px solid var(--line);z-index:5}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand b{font-size:17px;letter-spacing:.2px}
+.brand small{color:var(--mute);display:block;font-size:11.5px;line-height:1.1}
+.logo{height:34px;width:auto;border-radius:6px;background:#fff;padding:2px}
+.logoTxt{height:34px;padding:0 8px;border-radius:6px;background:#fff;color:#1d4d2b;font-weight:800;display:flex;align-items:center;font-size:13px;letter-spacing:.5px}
+.sp{flex:1}
+.chip{border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--mute);font-size:12.5px;white-space:nowrap}
+.chip b{color:var(--ink)}
+.star{color:var(--sugar)}.star.off{color:#46564a}
+#panel{position:fixed;left:12px;top:64px;bottom:12px;width:390px;background:#13211acc;backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:14px;z-index:4;display:flex;flex-direction:column;overflow:hidden}
+#panel.min{bottom:auto;height:46px}
+#panel .ph{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+#panel .pb{overflow:auto;padding:12px 14px 16px;flex:1}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:#24392a;color:var(--cane)}
+.tag.blanca{color:#f3efe2;background:#3b3a33}.tag.morena{color:#e9b88a;background:#3d2a1c}.tag.etoh{color:#9fd0f5;background:#1c3346}
+h2{font-size:17px;margin:6px 0 6px}
+h3{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--mute);margin:16px 0 6px}
+p{line-height:1.45;margin:6px 0}
+details{background:#0f1b14;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-top:8px}
+details summary{cursor:pointer;color:var(--cane);font-weight:600}
+table.kv{width:100%;border-collapse:collapse;font-size:12.8px}
+table.kv td{border-bottom:1px solid #22382a;padding:5px 4px;vertical-align:top}
+table.kv td:first-child{color:var(--mute);width:44%}
+.var{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;background:#0f1b14}
+.var .vh{display:flex;align-items:center;gap:8px}
+.var .vh b{flex:1}
+.var .val{font-variant-numeric:tabular-nums;color:var(--sugar);font-weight:700}
+.var .st{font-size:12px;color:var(--mute)}
+.lock{color:var(--warn)}
+.row{display:flex;gap:8px;align-items:center}
+.pred{display:flex;gap:8px;align-items:center;margin-top:6px}
+.pred input{flex:1}
+.hint{color:var(--mute);font-size:12.5px}
+#minimap{position:fixed;right:12px;top:64px;width:230px;height:170px;border:1px solid var(--line);border-radius:12px;background:#0b140ecc;z-index:4}
+#prompt{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#0c160fe6;border:1px solid var(--cane);border-radius:999px;padding:9px 18px;z-index:4;display:none;font-weight:600}
+#prompt kbd,.k{display:inline-block;border:1px solid var(--mute);border-bottom-width:2px;border-radius:5px;padding:0 6px;font-size:12px;margin:0 2px;color:var(--ink)}
+#keys{position:fixed;right:12px;bottom:12px;color:var(--mute);font-size:12px;z-index:3;background:#0b140eaa;padding:6px 10px;border-radius:9px}
+#cross{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#fff9;z-index:3;pointer-events:none}
+.ov{position:fixed;inset:0;background:#07100acc;z-index:20;display:flex;align-items:center;justify-content:center;padding:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;max-width:760px;width:100%;max-height:92vh;overflow:auto;padding:20px 22px;box-shadow:0 20px 60px #0008}
+.card.wide{max-width:1100px}
+.card h1{font-size:22px;margin:4px 0 2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px;margin:6px 0}
+.field label{font-size:12.5px;color:var(--mute)}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;border-radius:0;flex:1;background:transparent}
+.seg button.on{background:var(--cane);color:#10200f;font-weight:700}
+.hero{display:flex;gap:14px;align-items:center;margin-bottom:8px}
+.hero .logoBig{height:64px}
+.credit{color:var(--mute);font-size:12.5px;margin-top:2px}
+.slider{display:flex;align-items:center;gap:10px;margin:8px 0}
+.slider input[type=range]{flex:1;accent-color:var(--cane)}
+.slider input[type=number]{width:110px;text-align:right}
+.res{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:start;font-size:13px}
+.res .ok{color:var(--good);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.res .h{grid-column:2/4;color:var(--mute);font-size:12px;margin:-2px 0 4px}
+.catH{grid-column:1/4;margin-top:10px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--mute);border-bottom:1px solid var(--line);padding-bottom:3px}
+.bigStars{font-size:38px;letter-spacing:4px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.tcell{border:1px solid var(--line);border-radius:12px;padding:10px;background:#0f1b14;text-align:left}
+.tcell[disabled]{opacity:.45;cursor:not-allowed}
+.tcell.cur{border-color:var(--cane)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.tabs button.on{background:var(--cane);color:#10200f}
+table.dt{width:100%;border-collapse:collapse;font-size:12.5px}
+table.dt th,table.dt td{padding:5px 6px;border-bottom:1px solid #22382a;text-align:left;white-space:nowrap}
+table.dt th{color:var(--mute);position:sticky;top:0;background:var(--panel)}
+.tscroll{max-height:56vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.msg{padding:8px 10px;border-radius:9px;background:#1d2f22;border:1px solid var(--line);margin:8px 0;font-size:13px}
+.msg.err{border-color:var(--bad)}
+.foot{color:var(--mute);font-size:11.5px;margin-top:12px}
+#toast{position:fixed;left:50%;top:64px;transform:translateX(-50%);background:#0c160ff0;border:1px solid var(--cane);padding:8px 16px;border-radius:10px;z-index:30;display:none}
+@media (max-width:900px){#panel{width:calc(100% - 24px);top:auto;height:46%}#minimap{display:none}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<canvas id="view"></canvas>
+<div id="cross"></div>
+<div class="top" id="top" hidden>
+ <div class="brand"><span id="logoTop"></span><div><b>CañaLab</b><small>Biorrefinería de caña · azúcar y bioetanol</small></div></div>
+ <div class="sp"></div>
+ <span class="chip" id="chipTeam"></span>
+ <span class="chip" id="chipStars"></span>
+ <span class="chip" id="chipTime"></span>
+ <button class="ghost" id="btnTurns" title="Turnos (T)">Turnos</button>
+ <button class="ghost" id="btnHelp" title="Ayuda (H)">Ayuda</button>
+ <button class="ghost" id="btnDoc">Docente</button>
+ <button class="ghost" id="btnExit">Salir</button>
+</div>
+<aside id="panel" hidden>
+ <div class="ph"><span class="tag" id="pTag"></span><b id="pNum" style="flex:1"></b><span id="pStars"></span><button class="ghost" id="btnMin" title="Plegar">▾</button></div>
+ <div class="pb" id="pBody"></div>
+</aside>
+<canvas id="minimap" width="460" height="340" hidden></canvas>
+<div id="prompt"></div>
+<div id="keys" hidden><span class="k">W A S D</span> caminar · <span class="k">Shift</span> correr · arrastra para mirar · <span class="k">E</span> o clic en un equipo para operarlo</div>
+<div id="toast"></div>
+
+<!-- ingreso -->
+<div class="ov" id="ovLogin">
+ <div class="card">
+  <div class="hero"><span id="logoLogin"></span>
+   <div><h1>CañaLab</h1><div>Planta Virtual de Procesos Agroindustriales · Biorrefinería de caña de azúcar</div>
+   <div class="credit">Programa de Ingeniería Agroindustrial · Universidad Surcolombiana<br>Ing. Jaime Daniel Bustos, D.Sc.</div></div></div>
+  <p>Recorre en primera persona un ingenio a escala industrial que muele 400 t de caña por hora y produce azúcar morena en bolsa de 1 kg, azúcar blanca en bulto de 50 kg, energía eléctrica con el bagazo y etanol anhidro carburante a partir de la miel final. Doce turnos de producción, calificados contra la norma, la orden del cliente y la eficiencia del proceso.</p>
+  <h3>Modalidad</h3>
+  <div class="seg" id="segMod"><button data-m="individual" class="on">Individual</button><button data-m="pareja">En pareja</button></div>
+  <div class="grid2" style="margin-top:8px">
+   <div class="field"><label>Nombre completo</label><input id="n1" autocomplete="off"></div>
+   <div class="field"><label>Código estudiantil</label><input id="c1" inputmode="numeric" autocomplete="off"></div>
+   <div class="field p2" hidden><label>Nombre completo (integrante 2)</label><input id="n2" autocomplete="off"></div>
+   <div class="field p2" hidden><label>Código estudiantil (integrante 2)</label><input id="c2" inputmode="numeric" autocomplete="off"></div>
+   <div class="field"><label>Grupo</label><input id="grp" placeholder="Ej.: 01" autocomplete="off"></div>
+  </div>
+  <div class="msg err" id="loginErr" hidden></div>
+  <div class="row" style="margin-top:12px"><button class="pri" id="btnEnter">Entrar a la planta</button><span class="sp"></span><button class="ghost" id="btnDoc2">Acceso docente</button></div>
+  <div class="foot" id="footVer"></div>
+ </div>
+</div>
+
+<!-- tarjeta de estación -->
+<div class="ov" id="ovStation" hidden><div class="card" id="stCard"></div></div>
+<!-- resultado -->
+<div class="ov" id="ovResult" hidden><div class="card" id="resCard"></div></div>
+<!-- turnos -->
+<div class="ov" id="ovTurns" hidden><div class="card wide"><div class="row"><h1 style="flex:1">Turnos de producción</h1><button class="ghost" data-close>Cerrar</button></div><p class="hint">Un turno se habilita cuando el anterior tiene al menos una estrella. ★ inocuidad, seguridad y norma · ★★ además la orden del cliente · ★★★ además la eficiencia y una predicción acertada.</p><div class="tgrid" id="tGrid"></div></div></div>
+<!-- ayuda -->
+<div class="ov" id="ovHelp" hidden><div class="card"><div class="row"><h1 style="flex:1">Cómo se juega</h1><button class="ghost" data-close>Cerrar</button></div>
+ <p><b>Recorrido.</b> Camina con <span class="k">W A S D</span> o las flechas, corre con <span class="k">Shift</span> y arrastra con el mouse para mirar. Los equipos del turno actual tienen un anillo verde y una flecha. Acércate y pulsa <span class="k">E</span>, o haz clic sobre el equipo, para abrir su tablero. El botón «Ir» del panel te lleva directo a cada estación.</p>
+ <p><b>Turno.</b> Lee la orden de producción, visita las estaciones, fija las variables en cada tablero y escribe tu predicción del resultado. Luego pulsa «Producir lote».</p>
+ <p><b>Calificación.</b> ★ si cumples inocuidad, seguridad y norma · ★★ si además cumples la orden del cliente · ★★★ si además el proceso es eficiente (dentro del margen del óptimo) y tu predicción queda dentro de la tolerancia. Puntos: 100 por estrella y 50 por la predicción, menos 10 por cada intento previo del mismo turno.</p>
+ <p><b>Planta.</b> Patio y molienda al occidente; calderas y cogeneración al norte; casa de cocimiento (clarificación, sulfitación, evaporación, tachos, centrífugas, secado y empaque) en el centro; destilería y vinaza al oriente.</p>
+</div></div>
+<!-- docente -->
+<div class="ov" id="ovDoc" hidden><div class="card wide" id="docCard"></div></div>
+
+<script>
+/* ===================== CañaLab · modelos de proceso ===================== */
+const PRICES_DEF={
+ azucar:{v:2800,u:"$/kg",l:"Azúcar (valor de la sacarosa recuperada)"},
+ electricidad:{v:650,u:"$/kWh",l:"Electricidad comprada"},
+ exportacion:{v:300,u:"$/kWh",l:"Electricidad vendida a la red"},
+ vapor:{v:45000,u:"$/t",l:"Vapor de proceso"},
+ bagazo:{v:120000,u:"$/t",l:"Bagazo vendido (papelera)"},
+ cal:{v:900,u:"$/kg",l:"Cal viva"},
+ floculante:{v:28000,u:"$/kg",l:"Floculante (poliacrilamida)"},
+ azufre:{v:2600,u:"$/kg",l:"Azufre para SO₂"},
+ empaque:{v:2800,u:"$/kg",l:"Azúcar regalada en el empaque"},
+ etanol:{v:3600,u:"$/L",l:"Etanol anhidro"},
+ transporte:{v:22000,u:"$/m³",l:"Transporte de vinaza a campo"}
+};
+let PR={};for(const k in PRICES_DEF)PR[k]=PRICES_DEF[k].v;
+
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const r2=x=>Math.round(x*1e6)/1e6;
+function fmt(x,d=1){if(x===undefined||x===null||!isFinite(x))return "—";const neg=x<0;let s=Math.abs(x).toFixed(d);let [a,b]=s.split(".");a=a.replace(/\B(?=(\d{3})+(?!\d))/g,".");return (neg&&Number(s)!==0?"−":"")+a+(b?","+b:"")}
+function money(x){return "$ "+fmt(x,0)}
+function erf(x){const s=Math.sign(x);x=Math.abs(x);const t=1/(1+0.3275911*x);const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y}
+const Phi=z=>0.5*(1+erf(z/Math.SQRT2));
+function range(min,max,step){const a=[];for(let v=min;v<=max+step*1e-6;v=r2(v+step))a.push(r2(v));return a}
+function grid(inputs,fixed){ // producto cartesiano de los valores de las entradas
+ let L=[{}];for(const i of inputs){const vals=range(i.min,i.max,i.step);const N=[];for(const o of L)for(const v of vals)N.push({...o,[i.k]:v});L=N}
+ return L.map(p=>({...fixed,...p}))}
+const OPT={};function optOf(t){const key=t.id+"|"+JSON.stringify(PR);if(!(key in OPT))OPT[key]=t.optimum();return OPT[key]}
+// búsqueda genérica: mejor valor de "goal" entre los puntos que cumplen inocuidad, norma y cliente
+function bestOf(t,goal,mode){let best=null;for(const p of grid(t.inputs,t.fixed||{})){const r=t.sim(p);if(t.checks(r,{skipEff:true}).every(c=>c.ok)){const g=goal(r);if(best===null||(mode==="max"?g>best:g<best))best=g}}return best}
+const ok=(cond)=>!!cond;
+
+/* --- planta base --- */
+const CANA=400;            // t caña/h
+const FIB=0.14;            // fibra % caña
+const POLC=13.0;           // pol % caña
+/* ------------------ 1. Molienda ------------------ */
+function molSim(E,w,T){
+ const IP=95-22*Math.exp(-(E-8)/8);
+ const L=5.2*Math.exp(-0.075*(IP-85))*Math.pow(200/w,0.6)*Math.exp(-0.007*(T-60));
+ const ext=100-L;
+ const H=47.6+0.011*(w-200)+0.09*Math.max(0,T-72)+0.05*Math.max(0,IP-90);
+ const fib=CANA*FIB, bag=fib/(1-H/100-0.02), agua=w/100*fib, JM=CANA+agua-bag;
+ const pol=CANA*POLC/100*ext/100;                 // t pol/h en el jugo
+ const kWh=E*fib;                                  // desfibrador
+ const vapEvap=agua/4.2;                           // vapor para evaporar el agua añadida
+ const vapCal=agua*4.18*Math.max(0,T-30)/2200;     // vapor para calentar la imbibición
+ const ingreso=pol*1000*0.88*PR.azucar;
+ const costo=kWh*PR.electricidad+(vapEvap+vapCal)*PR.vapor;
+ return {IP,L,ext,H,bag,agua,JM,pol,kWh,vapEvap,vapCal,ingreso,costo,margen:ingreso-costo}
+}
+/* ------------------ 2. Cogeneración ------------------ */
+const BAG0=116, HB0=49, PCI0=7650, DPROC=195, PFAB=9;
+function calSim(lam,f){
+ const eta=0.93-0.0016*lam-0.30*Math.exp(-lam/9);
+ const CO=9000*Math.exp(-lam/9);
+ const O2=20.9*lam/(100+lam);
+ const quem=BAG0*f/100, sobra=BAG0-quem;
+ const S=quem*PCI0*eta/2900;                 // t vapor/h (63 bar, 480 °C)
+ const P=0.105*Math.min(S,DPROC)+0.25*Math.max(0,S-DPROC); // MW
+ const exp=P-PFAB;
+ const ingreso=exp*1000*PR.exportacion+sobra*PR.bagazo;
+ return {eta,CO,O2,quem,sobra,S,P,exp,ingreso,reserva:100-f}
+}
+/* ------------------ 3. Clarificación ------------------ */
+const JMC=455; // t/h de jugo mezclado
+function clarSim(pH,T,fl){
+ const inv=0.02+0.6*Math.exp(-2.2*(pH-6.5))*Math.exp(0.06*(T-100));      // % de la sacarosa
+ const color=11000*(1+0.9*Math.pow(Math.max(0,pH-7.6),1.3)*3)*Math.exp(0.02*(T-103));
+ const turb=18+300*Math.pow(pH-7.9,2)+40*Math.max(0,103-T)+120*Math.exp(-fl/1.0);
+ const calKg=CANA*(0.35+0.55*(pH-6.8));
+ const vap=JMC*3.9*(T-35)/2200;
+ const flKg=fl*JMC/1000;
+ const perd=inv/100*CANA*POLC/100*0.96*1000*0.88*PR.azucar;
+ const costo=calKg*PR.cal+flKg*PR.floculante+vap*PR.vapor+perd;
+ return {inv,color,turb,calKg,vap,flKg,perd,costo}
+}
+/* ------------------ 4. Sulfitación (azúcar blanca) ------------------ */
+const JSULF=230; // m³/h de jugo de la línea blanca
+function sulfSim(d,pH){
+ const color=520*Math.exp(-d/260)*(1+0.5*(pH-4.4));
+ const so2=0.055*d*(1+0.15*(4.6-pH));
+ const inv=0.004+0.03*Math.exp(-1.6*(pH-3.8));
+ const sKg=d*JSULF/1000/2;                            // azufre: 1 kg S → 2 kg SO₂
+ const perd=inv/100*JSULF*0.13*1000*0.88*PR.azucar;
+ const costo=sKg*PR.azufre+perd;
+ return {color,so2,inv,sKg,perd,costo}
+}
+/* ------------------ 5. Evaporación ------------------ */
+const JCL=460, BXJ=14.5;
+function evapSim(n,Bm){
+ const W=JCL*(1-BXJ/Bm);
+ const S=W/(0.88*n);
+ const solid=JCL*BXJ/100;
+ const Wt=solid*(100/Bm-100/92);
+ const St=1.05*Wt;
+ const cap=n*700000;                                  // costo anualizado por efecto ($/h)
+ const costo=(S+St)*PR.vapor+cap;
+ return {W,S,Wt,St,cap,costo,Tmax:Bm>68?1:0}
+}
+/* ------------------ 6. Tachos ------------------ */
+function tachSim(S,seed){
+ const fg=S>1.20?Math.pow((S-1.20)/0.15,2):0;
+ const AM=0.80*Math.cbrt(500/seed)*(1-0.25*Math.min(1,fg));
+ const CV=28+40*fg+6*Math.max(0,1.08-S)/0.06;
+ const t=1.1/Math.pow(S-1,0.7);
+ return {fg,AM,CV,t}
+}
+/* ------------------ 7. Centrífugas ------------------ */
+function centSim(wB,wM){
+ const polB=99.95-0.9*Math.exp(-wB/6);
+ const colB=70+400*Math.exp(-wB/6);
+ const polM=99.6-4.2*Math.exp(-wM/4);
+ const colM=1100+5200*Math.exp(-wM/3.5);
+ const dis=0.55*wB+0.55*wM;                           // % de la carga redisuelta
+ const rec=dis/100*24;                                 // t/h de azúcar que vuelve a tachos
+ const costo=rec*0.9*PR.vapor+rec*1000*0.012*PR.azucar;
+ return {polB,colB,polM,colM,dis,rec,costo}
+}
+/* ------------------ 8. Secado y enfriamiento ------------------ */
+function secSim(Ta,Q,Qc){
+ const hum=0.010+0.55*Math.exp(-0.045*(Ta-35)*Math.pow(Q,0.6));
+ const dC=4*Math.exp(0.06*(Ta-80));
+ const color=108+dC;
+ const Ts=0.55*Ta+12;
+ const Tout=25+(Ts-25)*Math.exp(-0.8*Qc);
+ const finos=0.1*Math.pow(Q,1.5);
+ const vap=24000*Q*1.01*(Ta-25)/2100/1000;           // t vapor/h para calentar el aire
+ const kWh=(Q+Qc)*24*9;
+ const costo=vap*PR.vapor+kWh*PR.electricidad+finos/100*24000*0.3*PR.azucar/100;
+ return {hum,dC,color,Ts,Tout,finos,vap,kWh,costo}
+}
+/* ------------------ 9. Empaque ------------------ */
+function empSim(m1,v,m50){
+ const s1=2.5+0.0004*v*v, s50=140;
+ const T1=15,T50=500;
+ const pT1=Phi((1000-T1-m1)/s1), p2T1=Phi((1000-2*T1-m1)/s1), pbn1=Phi((1000-m1)/s1);
+ const pT50=Phi((50000-T50-m50)/s50), p2T50=Phi((50000-2*T50-m50)/s50), pbn50=Phi((50000-m50)/s50);
+ const bultos=8;                                    // bultos de 50 kg por minuto
+ const reg1=(m1-1000)*v*60/1000, reg50=(m50-50000)*bultos*60/1000; // kg/h regalados
+ const reg=reg1+reg50;
+ return {s1,s50,pT1,p2T1,pbn1,pT50,p2T50,pbn50,reg1,reg50,reg,costo:reg*PR.empaque,v}
+}
+/* ------------------ 10. Fermentación ------------------ */
+const ARTF=62; // t ART/h al mosto
+function fermSim(A,T,pHt){
+ const ufc=3e5*Math.exp(0.35*(T-33))*Math.exp(1.4*(pHt-2.2));
+ const via=100*(1-0.6*Math.exp(-(pHt-1.6)/0.12))-1.2*Math.max(0,T-34)*3;
+ const res=0.4+6*Math.pow(Math.max(0,(A-185)/40),2)*Math.exp(0.15*(T-32));
+ const eta=0.94-0.03*(ufc/1e6)-0.0025*Math.max(0,100-via)-0.004*Math.max(0,T-35);
+ const conv=Math.max(0,A-res)/A;
+ const etg=Math.max(0,A-res)*0.511*eta;             // g/L de etanol
+ const gl=etg/7.89;                                  // % v/v
+ const L=ARTF*1000*conv*0.511*eta/0.789;             // L/h
+ const tf=6+(A/25)*Math.exp(-0.09*(T-32));           // h de ciclo
+ return {ufc,via,res,eta,gl,L,tf,ingreso:L*PR.etanol}
+}
+/* ------------------ 11. Destilación y deshidratación ------------------ */
+function destSim(R,tc){
+ const xh=96.0-3.2*Math.exp(-(R-1.5)/0.9);
+ const tb=10*(4.5/(100-xh));
+ const agua=0.05+0.25*Math.exp((tc-tb)/1.5);
+ const met=0.08;
+ const et=100-agua-met-0.04;
+ const vap=9.5*(R+1)+42/tc;                          // t/h
+ return {xh,tb,agua,met,et,vap,costo:vap*PR.vapor}
+}
+/* ------------------ 12. Vinaza ------------------ */
+const VIN0=330, BX0=9, K0=6.5;
+function vinSim(Bf,dK){
+ const V=VIN0*BX0/Bf;
+ const W=VIN0-V;
+ const vap=W/(4*(1-0.006*(Bf-BX0)));
+ const K=VIN0*K0*22/1000;                            // t K₂O/día
+ const area=K*1000/dK;                               // ha/día
+ const costo=vap*PR.vapor+V*PR.transporte+area/22*35000;
+ return {V,W,vap,K,area,costo}
+}
+
+/* ===================== TURNOS ===================== */
+const TURNS=[
+{id:1,title:"Molienda: preparación e imbibición",product:"Común",st:["prep","mol"],
+ brief:"Llega caña limpia a 400 t/h. Fija la energía del desfibrador, el agua de imbibición y su temperatura. Saca la mayor cantidad de sacarosa sin ahogar la clarificación ni mojar el bagazo que alimenta la caldera.",
+ concept:"El desfibrador rompe las células de almacenamiento: el índice de preparación (IP) es la fracción de células abiertas. El tándem exprime el jugo, y la imbibición en contracorriente diluye el jugo residual del bagazo para que el siguiente molino lo extraiga. Más agua extrae más pol, pero también diluye el jugo mezclado (más agua que evaporar) y humedece el bagazo. El agua caliente mejora la extracción, pero por encima de 72 °C el bagazo desliza en las mazas y sale más húmedo.",
+ order:[["Caña","400 t/h · fibra 14 % · pol 13 %"],["Extracción de pol","≥ 95,5 % (estándar de fábrica)"],["Bagazo a caldera","humedad ≤ 50 %"],["Clarificación","jugo mezclado ≤ 450 t/h"],["Higiene del tándem","imbibición ≥ 60 °C"],["Eficiencia","margen ≥ 99,5 % del máximo"]],
+ lot:[["Caña","400 t/h"],["Fibra","56 t/h"],["Pol en caña","52 t/h"]],priceKeys:["azucar","electricidad","vapor"],
+ inputs:[{k:"E",s:"Desfibrador",st:"prep",l:"Energía del desfibrador",u:"kWh/t fibra",min:8,max:40,step:1,def:14},
+  {k:"w",s:"Imbibición",st:"mol",l:"Agua de imbibición",u:"% fibra",min:150,max:350,step:5,def:200},
+  {k:"T",s:"Temperatura",st:"mol",l:"Temperatura del agua de imbibición",u:"°C",min:40,max:90,step:1,def:50}],
+ predict:{l:"Tu predicción: extracción de pol en el tándem",u:"%",tol:0.004,get:r=>r.ext},
+ sim(p){return {...molSim(p.E,p.w,p.T),p}},
+ optimum(){return bestOf(this,r=>r.margen,"max")},
+ checks(r,o={}){const L=[
+  {cat:"seg",label:"Imbibición ≥ 60 °C (control de Leuconostoc y dextranas en el tándem)",ok:r.p.T>=60,d:fmt(r.p.T,0)+" °C",h:"El jugo tibio de los molinos es un caldo de cultivo: Leuconostoc convierte sacarosa en dextrana."},
+  {cat:"norma",label:"Extracción de pol ≥ 95,5 % (estándar de fábrica)",ok:r.ext>=95.5-1e-9,d:fmt(r.ext,2)+" %",h:"Prepara mejor la caña (más energía al desfibrador) o añade más imbibición."},
+  {cat:"norma",label:"Humedad del bagazo ≤ 50 % (diseño de la caldera)",ok:r.H<=50+1e-9,d:fmt(r.H,2)+" %",h:"Mucha agua, agua demasiado caliente o caña sobrepreparada dejan el bagazo húmedo."},
+  {cat:"cliente",label:"Jugo mezclado ≤ 450 t/h (capacidad de la clarificación)",ok:r.JM<=450+1e-9,d:fmt(r.JM,1)+" t/h",h:"Cada tonelada de agua de imbibición termina en el jugo mezclado."}];
+  if(!o.skipEff){const mx=optOf(this);L.push({cat:"efic",label:"Margen ≥ 99,5 % del máximo",ok:r.margen>=mx*0.995,d:`${money(r.margen)}/h · meta ≥ ${money(mx*0.995)}/h`,h:"Compara el valor de la pol extraída con la energía del desfibrador y el vapor que cuesta evaporar el agua añadida."})}
+  return L}},
+
+{id:2,title:"Cogeneración con bagazo",product:"Común",st:["cald"],
+ brief:"La caldera recibe el bagazo de la molienda. Ajusta el exceso de aire y la fracción del bagazo que se quema. La fábrica necesita su vapor, la red espera la energía del contrato y la papelera compra el bagazo que sobre.",
+ concept:"Con poco aire la combustión queda incompleta (CO, inquemados); con mucho aire, la chimenea se lleva calor en gases calientes. La eficiencia es máxima cerca de un 25–30 % de exceso. El vapor de alta pasa por un turbogenerador de contrapresión que entrega el vapor de escape a la fábrica; el vapor que sobra se expande en una etapa de condensación, que genera más energía por tonelada pero no sirve al proceso. El bagazo que no se quema puede venderse o guardarse para arranques.",
+ order:[["Bagazo","116 t/h · humedad 49 % · PCI 7 650 kJ/kg"],["Vapor de proceso","≥ 195 t/h"],["CO en chimenea","≤ 400 ppm"],["Reserva de bagazo","≥ 4 % para arranques"],["Contrato con la red","exportación ≥ 18 MW"],["Eficiencia","ingreso ≥ 99,5 % del máximo"]],
+ lot:[["Bagazo","116 t/h"],["Consumo de la fábrica","9 MW"],["Vapor","63 bar · 480 °C"]],priceKeys:["exportacion","bagazo"],
+ inputs:[{k:"lam",s:"Exceso de aire",st:"cald",l:"Exceso de aire en el hogar",u:"%",min:5,max:80,step:1,def:50},
+  {k:"f",s:"Bagazo quemado",st:"cald",l:"Fracción del bagazo que va a la caldera",u:"%",min:70,max:100,step:1,def:85}],
+ predict:{l:"Tu predicción: vapor que produce la caldera",u:"t/h",tol:0.01,get:r=>r.S},
+ sim(p){return {...calSim(p.lam,p.f),p}},
+ optimum(){return bestOf(this,r=>r.ingreso,"max")},
+ checks(r,o={}){const L=[
+  {cat:"seg",label:"CO en chimenea ≤ 400 ppm (combustión completa, sin riesgo en el hogar)",ok:r.CO<=400+1e-9,d:fmt(r.CO,0)+" ppm",h:"Falta aire: los gases combustibles salen sin quemar."},
+  {cat:"norma",label:"Reserva de bagazo ≥ 4 % (arranques y paros)",ok:r.reserva>=4-1e-9,d:fmt(r.reserva,0)+" %",h:"Guarda bagazo para reencender la caldera después de un paro."},
+  {cat:"cliente",label:"Vapor ≥ 195 t/h (demanda de la fábrica)",ok:r.S>=DPROC-1e-9,d:fmt(r.S,1)+" t/h",h:"Sin vapor no hay evaporación ni cocimiento: quema más bagazo o mejora la eficiencia."},
+  {cat:"cliente",label:"Exportación ≥ 18 MW (contrato con la red)",ok:r.exp>=18-1e-9,d:fmt(r.exp,1)+" MW",h:"El vapor que sobra en la etapa de condensación es el que genera excedentes."}];
+  if(!o.skipEff){const mx=optOf(this);L.push({cat:"efic",label:"Ingreso ≥ 99,5 % del máximo",ok:r.ingreso>=mx*0.995,d:`${money(r.ingreso)}/h · meta ≥ ${money(mx*0.995)}/h`,h:"¿Vale más una tonelada de bagazo vendida o la energía que genera? Mira los precios."})}
+  return L}},
+
+{id:3,title:"Clarificación del jugo",product:"Común",st:["clar"],
+ brief:"El jugo mezclado llega turbio y ácido. Fija el pH de encalado, la temperatura de calentamiento y la dosis de floculante. El jugo claro debe salir limpio, sin perder sacarosa por inversión y sin oscurecerse.",
+ concept:"La cal neutraliza los ácidos y precipita fosfato de calcio, que atrapa coloides y bagacillo. A pH bajo la sacarosa se invierte (glucosa + fructosa); a pH alto los azúcares reductores se degradan y forman color. Calentar por encima de 102 °C y flashear elimina el aire, completa la reacción y destruye microorganismos. El floculante aglomera el precipitado para que decante rápido.",
+ order:[["Jugo mezclado","455 t/h · pH 5,3"],["Calentamiento","≥ 102 °C (flasheo)"],["Inversión","≤ 0,10 % de la sacarosa"],["Turbiedad del jugo claro","≤ 40 NTU"],["Línea blanca","color ≤ 12 500 UI"],["Eficiencia","costo ≤ mínimo + 5 %"]],
+ lot:[["Jugo mezclado","455 t/h"],["Cal","lechada de 8 °Bé"],["Floculante","poliacrilamida aniónica"]],priceKeys:["cal","floculante","vapor","azucar"],
+ inputs:[{k:"pH",s:"Encalado",st:"clar",l:"pH del jugo encalado",u:"",min:6.8,max:8.6,step:0.05,def:7.2},
+  {k:"T",s:"Calentamiento",st:"clar",l:"Temperatura del jugo encalado",u:"°C",min:95,max:110,step:0.5,def:98},
+  {k:"fl",s:"Floculante",st:"clar",l:"Dosis de floculante",u:"ppm",min:0,max:6,step:0.1,def:1}],
+ predict:{l:"Tu predicción: turbiedad del jugo claro",u:"NTU",tol:0.05,get:r=>r.turb},
+ sim(p){return {...clarSim(p.pH,p.T,p.fl),p}},
+ optimum(){return bestOf(this,r=>r.costo,"min")},
+ checks(r,o={}){const L=[
+  {cat:"seg",label:"Calentamiento ≥ 102 °C (flasheo y reducción microbiana)",ok:r.p.T>=102-1e-9,d:fmt(r.p.T,1)+" °C",h:"Sin flasheo quedan burbujas que hacen flotar el lodo y sobreviven microorganismos."},
+  {cat:"norma",label:"Inversión ≤ 0,10 % de la sacarosa",ok:r.inv<=0.10+1e-9,d:fmt(r.inv,3)+" %",h:"El pH es muy bajo para la temperatura: la sacarosa se hidroliza."},
+  {cat:"norma",label:"Turbiedad del jugo claro ≤ 40 NTU",ok:r.turb<=40+1e-9,d:fmt(r.turb,1)+" NTU",h:"El fosfato de calcio flocula mejor cerca de pH 7,9; el floculante ayuda a decantar."},
+  {cat:"cliente",label:"Color del jugo claro ≤ 12 500 UI (línea de azúcar blanca)",ok:r.color<=12500+1e-9,d:fmt(r.color,0)+" UI",h:"El exceso de cal destruye reductores y forma color."}];
+  if(!o.skipEff){const mn=optOf(this);L.push({cat:"efic",label:"Costo ≤ mínimo + 5 %",ok:r.costo<=mn*1.05,d:`${money(r.costo)}/h · meta ≤ ${money(mn*1.05)}/h`,h:"Suma cal, floculante, vapor y la sacarosa invertida."})}
+  return L}},
+
+{id:4,title:"Sulfitación para azúcar blanca",product:"Azúcar blanca",st:["sulf"],
+ brief:"Una parte del jugo va a la línea de azúcar blanca. Fija la dosis de SO₂ en la torre de sulfitación y el pH del jugo sulfitado. Un comprador de bebidas quiere azúcar muy blanca y con poco sulfito.",
+ concept:"El SO₂ blanquea porque reduce los grupos coloreados y bloquea las reacciones de pardeamiento. A pH más bajo blanquea mejor, pero la sacarosa empieza a invertirse. Parte del SO₂ queda ocluido en el cristal: es un aditivo con límite máximo, por eso la dosis debe ser la mínima que logre el color.",
+ order:[["Jugo de la línea blanca","230 m³/h"],["SO₂ residual","≤ 50 mg/kg (NA 0009:2002)"],["Color","≤ 150 UI (Codex Stan 212-1999, azúcar blanco de plantación)"],["Cliente","color ≤ 100 UI · SO₂ ≤ 25 mg/kg"],["Eficiencia","costo ≤ mínimo + 5 %"]],
+ lot:[["Jugo","230 m³/h"],["Azufre","quemado en horno rotatorio"]],priceKeys:["azufre","azucar"],
+ inputs:[{k:"d",s:"Dosis de SO₂",st:"sulf",l:"Dosis de SO₂ en la torre",u:"mg/L",min:100,max:800,step:10,def:250},
+  {k:"pH",s:"pH sulfitado",st:"sulf",l:"pH del jugo sulfitado",u:"",min:3.6,max:5.4,step:0.05,def:5.0}],
+ predict:{l:"Tu predicción: color del azúcar blanca",u:"UI",tol:0.04,get:r=>r.color},
+ sim(p){return {...sulfSim(p.d,p.pH),p}},
+ optimum(){return bestOf(this,r=>r.costo,"min")},
+ checks(r,o={}){const L=[
+  {cat:"seg",label:"SO₂ residual ≤ 50 mg/kg (aditivo, NA 0009:2002)",ok:r.so2<=50+1e-9,d:fmt(r.so2,1)+" mg/kg",h:"Demasiado SO₂: el sulfito queda en el cristal."},
+  {cat:"norma",label:"Color ≤ 150 UI (Codex Stan 212-1999)",ok:r.color<=150+1e-9,d:fmt(r.color,0)+" UI",h:"Sube la dosis o baja el pH."},
+  {cat:"cliente",label:"Color ≤ 100 UI",ok:r.color<=100+1e-9,d:fmt(r.color,0)+" UI",h:"El cliente envasa bebidas claras."},
+  {cat:"cliente",label:"SO₂ residual ≤ 25 mg/kg",ok:r.so2<=25+1e-9,d:fmt(r.so2,1)+" mg/kg",h:"Blanquea con pH en lugar de más SO₂."}];
+  if(!o.skipEff){const mn=optOf(this);L.push({cat:"efic",label:"Costo ≤ mínimo + 5 %",ok:r.costo<=mn*1.05,d:`${money(r.costo)}/h · meta ≤ ${money(mn*1.05)}/h`,h:"El azufre cuesta, pero la sacarosa invertida a pH bajo también."})}
+  return L}},
+
+{id:5,title:"Evaporación de múltiple efecto",product:"Común",st:["evap"],
+ brief:"Llega jugo claro a 14,5 °Brix. Decide cuántos efectos opera el evaporador y el Brix de la meladura. El vapor de escape es limitado y los tachos necesitan meladura concentrada.",
+ concept:"En un múltiple efecto, el vapor que hierve el jugo de un cuerpo calienta el siguiente: con n efectos, una tonelada de vapor evapora casi n toneladas de agua. Cada efecto adicional cuesta equipo. Concentrar más en el evaporador ahorra vapor en los tachos, que son de un solo efecto, pero por encima de 68 °Brix la meladura se sobresatura y cristaliza en los tubos.",
+ order:[["Jugo claro","460 t/h · 14,5 °Brix"],["Meladura","≥ 60 °Brix (tachos)"],["Último efecto","≤ 68 °Brix (sin cristalización)"],["Casa de calderas","vapor al evaporador ≤ 95 t/h"],["Eficiencia","costo ≤ mínimo + 5 %"]],
+ lot:[["Jugo claro","460 t/h"],["Sólidos","66,7 t/h"],["Efecto (equipo)","$ 700 000/h anualizado"]],priceKeys:["vapor"],
+ inputs:[{k:"n",s:"Efectos",st:"evap",l:"Número de efectos en operación",u:"",min:3,max:6,step:1,def:3},
+  {k:"Bm",s:"Brix",st:"evap",l:"Brix de la meladura",u:"°Brix",min:55,max:72,step:0.5,def:58}],
+ predict:{l:"Tu predicción: vapor que consume el evaporador",u:"t/h",tol:0.02,get:r=>r.S},
+ sim(p){return {...evapSim(p.n,p.Bm),p}},
+ optimum(){return bestOf(this,r=>r.costo,"min")},
+ checks(r,o={}){const L=[
+  {cat:"seg",label:"Meladura ≤ 68 °Brix (sin cristalización ni taponamiento de tubos)",ok:r.p.Bm<=68+1e-9,d:fmt(r.p.Bm,1)+" °Brix",h:"El último efecto está frío: la meladura se sobresatura y cristaliza."},
+  {cat:"norma",label:"Meladura ≥ 60 °Brix (alimentación a tachos)",ok:r.p.Bm>=60-1e-9,d:fmt(r.p.Bm,1)+" °Brix",h:"Meladura diluida: los tachos tardan y gastan vapor."},
+  {cat:"cliente",label:"Vapor al evaporador ≤ 95 t/h",ok:r.S<=95+1e-9,d:fmt(r.S,1)+" t/h",h:"Pocos efectos: cada tonelada de vapor evapora muy poca agua."}];
+  if(!o.skipEff){const mn=optOf(this);L.push({cat:"efic",label:"Costo ≤ mínimo + 5 %",ok:r.costo<=mn*1.05,d:`${money(r.costo)}/h · meta ≤ ${money(mn*1.05)}/h`,h:"Suma vapor del evaporador, vapor de los tachos y el costo de cada efecto."})}
+  return L}},
+
+{id:6,title:"Cocimiento en tachos",product:"Azúcar blanca",st:["tach"],
+ brief:"El tacho de masa A recibe meladura y semilla. Fija la sobresaturación de trabajo y la cantidad de semilla. El cristal debe salir parejo y del tamaño que pide el cliente, en el menor tiempo.",
+ concept:"El cristal crece más rápido cuanto mayor es la sobresaturación, pero por encima de la zona metaestable (≈ 1,20 para esta pureza) nacen cristales nuevos: grano falso, que sube el coeficiente de variación y achica la abertura media. El número de cristales lo fija la semilla: con la misma masa de azúcar, más semilla da cristales más pequeños.",
+ order:[["Templa","60 t de masa A · pureza 88"],["Coeficiente de variación","≤ 35 % (estándar de fábrica)"],["Cliente","abertura media 0,70–0,90 mm"],["Eficiencia","tiempo de templa ≤ mínimo + 5 %"]],
+ lot:[["Meladura","65 °Brix"],["Semilla","slurry en alcohol isopropílico"]],priceKeys:[],
+ inputs:[{k:"S",s:"Sobresaturación",st:"tach",l:"Coeficiente de sobresaturación",u:"",min:1.02,max:1.40,step:0.01,def:1.10},
+  {k:"seed",s:"Semilla",st:"tach",l:"Semilla por templa",u:"g",min:100,max:1500,step:10,def:300}],
+ predict:{l:"Tu predicción: abertura media del cristal",u:"mm",tol:0.03,get:r=>r.AM},
+ sim(p){return {...tachSim(p.S,p.seed),p}},
+ optimum(){return bestOf(this,r=>r.t,"min")},
+ checks(r,o={}){const L=[
+  {cat:"norma",label:"Coeficiente de variación ≤ 35 %",ok:r.CV<=35+1e-9,d:fmt(r.CV,1)+" %",h:"Saliste de la zona metaestable: hay grano falso (o el cristal se disuelve con sobresaturación muy baja)."},
+  {cat:"cliente",label:"Abertura media ≥ 0,70 mm",ok:r.AM>=0.70-1e-9,d:fmt(r.AM,3)+" mm",h:"Demasiada semilla o grano falso: los cristales quedan pequeños."},
+  {cat:"cliente",label:"Abertura media ≤ 0,90 mm",ok:r.AM<=0.90+1e-9,d:fmt(r.AM,3)+" mm",h:"Poca semilla: los cristales crecen demasiado."}];
+  if(!o.skipEff){const mn=optOf(this);L.push({cat:"efic",label:"Tiempo de templa ≤ mínimo + 5 %",ok:r.t<=mn*1.05,d:`${fmt(r.t,2)} h · meta ≤ ${fmt(mn*1.05,2)} h`,h:"Trabaja con la mayor sobresaturación que todavía no forme grano falso."})}
+  return L}},
+
+{id:7,title:"Centrífugas: azúcar morena y blanca",product:"Morena y blanca",st:["cent"],
+ brief:"Las centrífugas separan los cristales de la miel. Fija el agua de lavado de la batería blanca y de la batería morena. La morena debe conservar su película de miel; la blanca, salir limpia.",
+ concept:"El cristal sale cubierto de una película de miel madre, oscura e impura. El agua de lavado la arrastra, pero también disuelve parte del cristal, que vuelve al cocimiento y cuesta vapor. El azúcar morena es, precisamente, cristal con parte de su miel: si se lava de más, pierde color y sabor; si se lava poco, no cumple la polarización.",
+ order:[["Masa cocida","24 t/h por batería"],["Morena","pol ≥ 96 °Z (NA 0008:2002)"],["Blanca","pol ≥ 99,5 °Z · color ≤ 150 UI (Codex Stan 212-1999)"],["Cliente morena","pol ≥ 97,5 °Z · color 2 000–3 500 UI"],["Cliente blanca","color ≤ 110 UI"],["Eficiencia","costo ≤ mínimo + 5 %"]],
+ lot:[["Masa A blanca","24 t/h"],["Masa A morena","24 t/h"]],priceKeys:["vapor","azucar"],
+ inputs:[{k:"wB",s:"Lavado blanca",st:"cent",l:"Agua de lavado, batería blanca",u:"L/carga",min:0,max:30,step:0.5,def:6},
+  {k:"wM",s:"Lavado morena",st:"cent",l:"Agua de lavado, batería morena",u:"L/carga",min:0,max:12,step:0.25,def:1}],
+ predict:{l:"Tu predicción: color de la azúcar blanca",u:"UI",tol:0.04,get:r=>r.colB},
+ sim(p){return {...centSim(p.wB,p.wM),p}},
+ optimum(){return bestOf(this,r=>r.costo,"min")},
+ checks(r,o={}){const L=[
+  {cat:"norma",label:"Morena: pol ≥ 96 °Z (NA 0008:2002)",ok:r.polM>=96-1e-9,d:fmt(r.polM,2)+" °Z",h:"Lava un poco la morena: tiene demasiada miel."},
+  {cat:"norma",label:"Blanca: pol ≥ 99,5 °Z (Codex Stan 212-1999)",ok:r.polB>=99.5-1e-9,d:fmt(r.polB,2)+" °Z",h:"Lava más la blanca."},
+  {cat:"norma",label:"Blanca: color ≤ 150 UI (Codex Stan 212-1999)",ok:r.colB<=150+1e-9,d:fmt(r.colB,0)+" UI",h:"Lava más la blanca."},
+  {cat:"cliente",label:"Morena: pol ≥ 97,5 °Z",ok:r.polM>=97.5-1e-9,d:fmt(r.polM,2)+" °Z",h:""},
+  {cat:"cliente",label:"Morena: color entre 2 000 y 3 500 UI",ok:r.colM>=2000-1e-9&&r.colM<=3500+1e-9,d:fmt(r.colM,0)+" UI",h:"El cliente quiere tono y sabor de miel, sin que parezca crudo."},
+  {cat:"cliente",label:"Blanca: color ≤ 110 UI",ok:r.colB<=110+1e-9,d:fmt(r.colB,0)+" UI",h:""}];
+  if(!o.skipEff){const mn=optOf(this);L.push({cat:"efic",label:"Costo ≤ mínimo + 5 %",ok:r.costo<=mn*1.05,d:`${money(r.costo)}/h · meta ≤ ${money(mn*1.05)}/h`,h:"Cada litro de más disuelve azúcar que vuelve a los tachos."})}
+  return L}},
+
+{id:8,title:"Secado y enfriamiento de la azúcar blanca",product:"Azúcar blanca",st:["sec"],
+ brief:"La azúcar blanca sale de las centrífugas húmeda y caliente. Fija la temperatura del aire de secado, la relación aire/azúcar y el aire del enfriador. Debe llegar seca, fría y sin oscurecerse a la tolva de empaque.",
+ concept:"La secadora rotatoria retira el agua superficial con aire caliente. Más aire y más temperatura secan más, pero el aire caliente amarillea el cristal y el aire rápido arrastra polvo de azúcar, que es combustible. El azúcar empacado tibio suelta humedad que se condensa en la bolsa fría y se apelmaza: por eso se enfría antes de empacar.",
+ order:[["Azúcar blanca","24 t/h · humedad 0,8 %"],["Humedad","≤ 0,06 % (NA 0009:2002)"],["Polvo arrastrado","≤ 0,8 % (riesgo de explosión de polvo)"],["Cliente","color ≤ 120 UI · azúcar a ≤ 35 °C"],["Eficiencia","costo ≤ mínimo + 5 %"]],
+ lot:[["Azúcar","24 t/h"],["Color de entrada","108 UI"]],priceKeys:["vapor","electricidad","azucar"],
+ inputs:[{k:"Ta",s:"Aire caliente",st:"sec",l:"Temperatura del aire de secado",u:"°C",min:60,max:110,step:1,def:70},
+  {k:"Q",s:"Aire secado",st:"sec",l:"Aire de secado",u:"kg aire/kg azúcar",min:0.5,max:4,step:0.1,def:1.2},
+  {k:"Qc",s:"Aire enfriador",st:"sec",l:"Aire del enfriador",u:"kg aire/kg azúcar",min:0.5,max:3,step:0.1,def:0.8}],
+ predict:{l:"Tu predicción: humedad final de la azúcar",u:"%",tol:0.08,get:r=>r.hum},
+ sim(p){return {...secSim(p.Ta,p.Q,p.Qc),p}},
+ optimum(){return bestOf(this,r=>r.costo,"min")},
+ checks(r,o={}){const L=[
+  {cat:"seg",label:"Polvo arrastrado ≤ 0,8 % (polvo combustible)",ok:r.finos<=0.8+1e-9,d:fmt(r.finos,2)+" %",h:"Demasiado aire: arrastra finos hacia los ductos."},
+  {cat:"norma",label:"Humedad ≤ 0,06 % (NA 0009:2002)",ok:r.hum<=0.06+1e-9,d:fmt(r.hum,3)+" %",h:"Sube la temperatura o el caudal de aire."},
+  {cat:"cliente",label:"Color ≤ 120 UI",ok:r.color<=120+1e-9,d:fmt(r.color,0)+" UI",h:"El aire muy caliente amarillea el cristal."},
+  {cat:"cliente",label:"Azúcar a la tolva ≤ 35 °C (sin apelmazamiento)",ok:r.Tout<=35+1e-9,d:fmt(r.Tout,1)+" °C",h:"Sube el aire del enfriador."}];
+  if(!o.skipEff){const mn=optOf(this);L.push({cat:"efic",label:"Costo ≤ mínimo + 5 %",ok:r.costo<=mn*1.05,d:`${money(r.costo)}/h · meta ≤ ${money(mn*1.05)}/h`,h:"Vapor para calentar aire, ventiladores y polvo perdido."})}
+  return L}},
+
+{id:9,title:"Empaque: bolsa de 1 kg y bulto de 50 kg",product:"Morena y blanca",st:["emp"],
+ brief:"La morena se empaca en bolsas de 1 kg y la blanca en bultos de 50 kg. Fija el punto de ajuste de cada llenadora y la velocidad de la de bolsas. Cumple el control metrológico y la orden de despacho, sin regalar azúcar.",
+ concept:"Cada llenadora entrega pesos con distribución normal alrededor del punto de ajuste. La Resolución 32209 de 2020 de la SIC exige que el promedio sea al menos el contenido nominal, que no más del 2,5 % de las unidades tenga una deficiencia mayor que T y que ninguna tenga una deficiencia mayor que 2T (T = 15 g para 1 kg; 1 % para 50 kg). Si la llenadora va más rápido, la desviación crece y hay que subir el punto de ajuste.",
+ order:[["Despacho","≥ 95 bolsas/min de morena · 8 bultos/min de blanca"],["Res. 32209 de 2020 (SIC)","promedio ≥ nominal · ≤ 2,5 % con deficiencia > T · ninguna > 2T"],["Cliente","≤ 1 % de bolsas y ≤ 2 % de bultos bajo el nominal"],["Eficiencia","azúcar regalada ≤ mínimo + 5 %"]],
+ lot:[["Bolsa","1 000 g · σ = 2,5 + 0,0004 v² g"],["Bulto","50 000 g · σ = 140 g"]],priceKeys:["empaque"],
+ inputs:[{k:"m1",s:"Bolsa 1 kg",st:"emp",l:"Punto de ajuste, bolsa de 1 kg (morena)",u:"g",min:995,max:1025,step:0.5,def:1000},
+  {k:"v",s:"Velocidad",st:"emp",l:"Velocidad de la llenadora de bolsas",u:"bolsas/min",min:60,max:140,step:5,def:120},
+  {k:"m50",s:"Bulto 50 kg",st:"emp",l:"Punto de ajuste, bulto de 50 kg (blanca)",u:"g",min:49800,max:50800,step:20,def:50000}],
+ predict:{l:"Tu predicción: azúcar regalada en total",u:"kg/h",tol:0.03,get:r=>r.reg},
+ sim(p){return {...empSim(p.m1,p.v,p.m50),p}},
+ optimum(){return bestOf(this,r=>r.reg,"min")},
+ checks(r,o={}){const L=[
+  {cat:"norma",label:"Promedio ≥ contenido nominal (bolsa y bulto)",ok:r.p.m1>=1000-1e-9&&r.p.m50>=50000-1e-9,d:`${fmt(r.p.m1,1)} g · ${fmt(r.p.m50,0)} g`,h:"La SIC exige que el promedio del lote no esté por debajo del nominal."},
+  {cat:"norma",label:"≤ 2,5 % de unidades con deficiencia > T",ok:r.pT1<=0.025&&r.pT50<=0.025,d:`${fmt(r.pT1*100,3)} % · ${fmt(r.pT50*100,3)} %`,h:""},
+  {cat:"norma",label:"Ninguna unidad con deficiencia > 2T (probabilidad ≤ 1 en 10 000)",ok:r.p2T1<=1e-4&&r.p2T50<=1e-4,d:`${fmt(r.p2T1*100,4)} % · ${fmt(r.p2T50*100,4)} %`,h:""},
+  {cat:"cliente",label:"Despacho ≥ 95 bolsas/min",ok:r.p.v>=95,d:fmt(r.p.v,0)+" bolsas/min",h:"La orden de morena no alcanza a salir."},
+  {cat:"cliente",label:"≤ 1 % de bolsas bajo 1 000 g",ok:r.pbn1<=0.01+1e-9,d:fmt(r.pbn1*100,2)+" %",h:"Sube el punto de ajuste o baja la velocidad."},
+  {cat:"cliente",label:"≤ 2 % de bultos bajo 50 kg",ok:r.pbn50<=0.02+1e-9,d:fmt(r.pbn50*100,2)+" %",h:"Sube el punto de ajuste del bulto."}];
+  if(!o.skipEff){const mn=optOf(this);L.push({cat:"efic",label:"Azúcar regalada ≤ mínimo + 5 %",ok:r.reg<=mn*1.05,d:`${fmt(r.reg,1)} kg/h · meta ≤ ${fmt(mn*1.05,1)} kg/h`,h:"Una llenadora más lenta es más precisa y permite un punto de ajuste más bajo."})}
+  return L}},
+
+{id:10,title:"Fermentación alcohólica",product:"Bioetanol",st:["ferm"],
+ brief:"La destilería recibe miel final y jugo: 62 t/h de azúcares reductores totales (ART). Fija la concentración de ART del mosto, la temperatura de los fermentadores y el pH del tratamiento ácido de la levadura recirculada.",
+ concept:"En el proceso Melle-Boinot la levadura se separa del vino por centrifugación, se trata con ácido sulfúrico para bajar la carga bacteriana y vuelve al fermentador. Un mosto más concentrado da un vino con más alcohol (menos vinaza y menos vapor en destilación), pero el etanol y la presión osmótica estresan la levadura y queda azúcar sin fermentar. El calor acelera la fermentación y también a las bacterias lácticas, que compiten por el azúcar.",
+ order:[["ART al mosto","62 t/h"],["Contaminación","≤ 1 × 10⁶ UFC/mL"],["Estándar de destilería","ART residual ≤ 2 g/L · viabilidad ≥ 85 %"],["Destilación","vino ≥ 9,0 % v/v · ciclo ≤ 13 h"],["Eficiencia","etanol ≥ 99,5 % del máximo"]],
+ lot:[["Miel final","pureza 38"],["Levadura","Saccharomyces cerevisiae · reciclo 90 %"]],priceKeys:["etanol"],
+ inputs:[{k:"A",s:"ART del mosto",st:"ferm",l:"Concentración de ART del mosto",u:"g/L",min:120,max:260,step:2,def:150},
+  {k:"T",s:"Temperatura",st:"ferm",l:"Temperatura de los fermentadores",u:"°C",min:28,max:38,step:0.5,def:36},
+  {k:"pHt",s:"Tratamiento ácido",st:"ferm",l:"pH del tratamiento ácido de la levadura",u:"",min:1.6,max:3.2,step:0.05,def:2.8}],
+ predict:{l:"Tu predicción: grado alcohólico del vino",u:"% v/v",tol:0.02,get:r=>r.gl},
+ sim(p){return {...fermSim(p.A,p.T,p.pHt),p}},
+ optimum(){return bestOf(this,r=>r.L,"max")},
+ checks(r,o={}){const L=[
+  {cat:"seg",label:"Contaminación ≤ 1 × 10⁶ UFC/mL",ok:r.ufc<=1e6+1,d:fmt(r.ufc/1e6,2)+" × 10⁶ UFC/mL",h:"Baja la temperatura o el pH del tratamiento ácido."},
+  {cat:"norma",label:"ART residual ≤ 2 g/L",ok:r.res<=2+1e-9,d:fmt(r.res,2)+" g/L",h:"La levadura no alcanza a consumir todo el azúcar en un mosto tan concentrado."},
+  {cat:"norma",label:"Viabilidad de la levadura ≥ 85 %",ok:r.via>=85-1e-9,d:fmt(r.via,1)+" %",h:"El tratamiento ácido es demasiado agresivo o el fermentador está muy caliente."},
+  {cat:"cliente",label:"Vino ≥ 9,0 % v/v",ok:r.gl>=9-1e-9,d:fmt(r.gl,2)+" % v/v",h:"Mosto diluido: más vinaza y más vapor en destilación."},
+  {cat:"cliente",label:"Ciclo de fermentación ≤ 13 h (capacidad de los fermentadores)",ok:r.tf<=13+1e-9,d:fmt(r.tf,1)+" h",h:"Fermentadores fríos o mosto muy concentrado: el ciclo se alarga y no alcanza la capacidad."}];
+  if(!o.skipEff){const mx=optOf(this);L.push({cat:"efic",label:"Etanol ≥ 99,5 % del máximo",ok:r.L>=mx*0.995,d:`${fmt(r.L,0)} L/h · meta ≥ ${fmt(mx*0.995,0)} L/h`,h:"Cada punto de rendimiento perdido por bacterias o azúcar residual es etanol que no sale."})}
+  return L}},
+
+{id:11,title:"Destilación y deshidratación",product:"Bioetanol",st:["dest","desh"],
+ brief:"El vino pasa por la columna destiladora y la rectificadora, que entrega etanol hidratado, y luego por los tamices moleculares. Fija la relación de reflujo de la rectificadora y el tiempo de ciclo de los tamices.",
+ concept:"La rectificación no supera el azeótropo etanol-agua (≈ 95,6 % en masa): más reflujo acerca el destilado a ese límite, a costa de vapor en el rehervidor. Los tamices de zeolita 3A retienen el agua; cada lecho adsorbe durante un ciclo y luego se regenera al vacío. Si el ciclo dura más que el tiempo de ruptura, el agua atraviesa el lecho; si es muy corto, la regeneración frecuente recircula etanol y gasta vapor.",
+ order:[["Etanol anhidro","≥ 99,5 % (Res. 789 de 2016)"],["Agua + metanol","≤ 0,5 % v/v (Res. 789 de 2016)"],["Cliente (mayorista)","agua ≤ 0,30 % v/v"],["Eficiencia","vapor ≤ mínimo + 5 %"]],
+ lot:[["Vino","9–10 % v/v"],["Tamices","2 lechos de zeolita 3A"]],priceKeys:["vapor"],
+ inputs:[{k:"R",s:"Reflujo",st:"dest",l:"Relación de reflujo de la rectificadora",u:"",min:1.5,max:6,step:0.1,def:2},
+  {k:"tc",s:"Ciclo",st:"desh",l:"Tiempo de ciclo de los tamices",u:"min",min:3,max:14,step:0.25,def:12}],
+ predict:{l:"Tu predicción: agua en el etanol anhidro",u:"% v/v",tol:0.05,get:r=>r.agua},
+ sim(p){return {...destSim(p.R,p.tc),p}},
+ optimum(){return bestOf(this,r=>r.vap,"min")},
+ checks(r,o={}){const L=[
+  {cat:"norma",label:"Etanol ≥ 99,5 % (Res. 789 de 2016)",ok:r.et>=99.5-1e-9,d:fmt(r.et,2)+" %",h:"El agua atraviesa los tamices: acorta el ciclo o sube el reflujo."},
+  {cat:"norma",label:"Agua + metanol ≤ 0,5 % v/v (Res. 789 de 2016)",ok:r.agua+r.met<=0.5+1e-9,d:fmt(r.agua+r.met,3)+" % v/v",h:""},
+  {cat:"cliente",label:"Agua ≤ 0,30 % v/v",ok:r.agua<=0.30+1e-9,d:fmt(r.agua,3)+" % v/v",h:"El agua separa la mezcla gasolina-etanol en los tanques."}];
+  if(!o.skipEff){const mn=optOf(this);L.push({cat:"efic",label:"Vapor ≤ mínimo + 5 %",ok:r.vap<=mn*1.05,d:`${fmt(r.vap,1)} t/h · meta ≤ ${fmt(mn*1.05,1)} t/h`,h:"El reflujo cuesta vapor en el rehervidor; los ciclos cortos, en la regeneración."})}
+  return L}},
+
+{id:12,title:"Vinaza: concentración y fertirriego",product:"Bioetanol",st:["vin"],
+ brief:"Por cada litro de etanol salen unos 11 L de vinaza. Fija el Brix al que se concentra y la dosis de potasio con que se aplica en el campo. La vinaza no se vierte: vuelve al cultivo como fertilizante.",
+ concept:"La vinaza tiene una demanda de oxígeno altísima y mucho potasio. Concentrarla en un evaporador reduce el volumen que viaja a campo, pero cuesta vapor, y por encima de 55 °Brix las sales de calcio incrustan los tubos. El potasio se reparte según la dosis agronómica: una dosis alta reduce el área a regar, pero saliniza el suelo.",
+ order:[["Vinaza","330 m³/h · 9 °Brix · 6,5 kg K₂O/m³"],["Evaporador","≤ 55 °Brix (incrustación)"],["Plan de manejo","dosis ≤ 150 kg K₂O/ha"],["Logística","≤ 140 m³/h a campo · ≤ 450 ha/día"],["Eficiencia","costo ≤ mínimo + 5 %"]],
+ lot:[["Vinaza","330 m³/h"],["Potasio","47 t K₂O/día"]],priceKeys:["vapor","transporte"],
+ inputs:[{k:"Bf",s:"Concentración",st:"vin",l:"Brix de la vinaza concentrada",u:"°Brix",min:9,max:65,step:0.5,def:12},
+  {k:"dK",s:"Dosis",st:"vin",l:"Dosis de potasio en fertirriego",u:"kg K₂O/ha",min:50,max:300,step:5,def:80}],
+ predict:{l:"Tu predicción: vinaza que viaja a campo",u:"m³/h",tol:0.02,get:r=>r.V},
+ sim(p){return {...vinSim(p.Bf,p.dK),p}},
+ optimum(){return bestOf(this,r=>r.costo,"min")},
+ checks(r,o={}){const L=[
+  {cat:"seg",label:"Vinaza ≤ 55 °Brix (sin incrustación de sulfato de calcio)",ok:r.p.Bf<=55+1e-9,d:fmt(r.p.Bf,1)+" °Brix",h:"Las sales precipitan en los tubos del último efecto."},
+  {cat:"norma",label:"Dosis ≤ 150 kg K₂O/ha (plan de manejo de suelos)",ok:r.p.dK<=150+1e-9,d:fmt(r.p.dK,0)+" kg/ha",h:"El potasio en exceso saliniza el suelo y se lixivia."},
+  {cat:"cliente",label:"Vinaza a campo ≤ 140 m³/h (flota de carrotanques)",ok:r.V<=140+1e-9,d:fmt(r.V,1)+" m³/h",h:"Concentra más."},
+  {cat:"cliente",label:"Área ≤ 450 ha/día (cuadrillas de riego)",ok:r.area<=450+1e-9,d:fmt(r.area,0)+" ha/día",h:"Con dosis baja hay que regar demasiada área."}];
+  if(!o.skipEff){const mn=optOf(this);L.push({cat:"efic",label:"Costo ≤ mínimo + 5 %",ok:r.costo<=mn*1.05,d:`${money(r.costo)}/h · meta ≤ ${money(mn*1.05)}/h`,h:"Vapor del evaporador, transporte y aplicación por hectárea."})}
+  return L}}
+];
+
+
+/* ===================== CañaLab · aplicación ===================== */
+const VERSION="2026.10.07-F1";
+const SHEET_WEBAPP_URL="";           // pega aquí la URL /exec del Apps Script de la hoja «Registro CañaLab»
+const DOCENTE_CODE="CANA-2026";      // debe coincidir con SECRET en el Apps Script
+const PLANTA="CañaLab";
+const NT=TURNS.length;
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store={get(k,d){try{const v=localStorage.getItem("canalab."+k);return v?JSON.parse(v):d}catch(e){return d}},
+ set(k,v){try{localStorage.setItem("canalab."+k,JSON.stringify(v))}catch(e){}}};
+function toast(m,ms=2600){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast._t);toast._t=setTimeout(()=>t.style.display="none",ms)}
+function hms(s){s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+" h ":"")+String(m).padStart(h?2:1,"0")+" min "+String(x).padStart(2,"0")+" s"}
+function stars(n,max=3){let s="";for(let i=0;i<max;i++)s+=`<span class="star ${i<n?"":"off"}">★</span>`;return s}
+function prodTag(p){const c=p.includes("Bioetanol")?"etoh":p.includes("blanca")&&!p.includes("Morena")?"blanca":p.includes("Morena")?"morena":"";return `<span class="tag ${c}">${esc(p)}</span>`}
+
+/* ---------- logo institucional: usa logo-usco.png si está en el repositorio ---------- */
+function logoHTML(big){return `<img class="logo ${big?"logoBig":""}" src="logo-usco.png" alt="Universidad Surcolombiana" onerror="this.outerHTML='<span class=&quot;logoTxt&quot;>USCO</span>'">`}
+$("logoTop").innerHTML=logoHTML();$("logoLogin").innerHTML=logoHTML(true);
+$("footVer").textContent=`Versión ${VERSION}`;
+
+/* ---------- configuración del docente (precios y desbloqueo) ---------- */
+let CFG=store.get("config",{precios:{},desbloquear:false});
+function applyCfg(){for(const k in PRICES_DEF)PR[k]=(CFG.precios&&isFinite(+CFG.precios[k])&&+CFG.precios[k]>0)?+CFG.precios[k]:PRICES_DEF[k].v}
+applyCfg();
+if(SHEET_WEBAPP_URL){fetch(SHEET_WEBAPP_URL+"?tipo=config").then(r=>r.json()).then(j=>{if(j&&(j.precios||"desbloquear" in j)){CFG={precios:j.precios||{},desbloquear:!!j.desbloquear};store.set("config",CFG);applyCfg();if(TEAM){renderPanel();}}}).catch(()=>{})}
+
+/* ---------- estado ---------- */
+let TEAM=null, PROG=null, CUR=1, VARS={}, VISITED=new Set(), PRED="";
+let sessionStart=0, lastAct=Date.now(), modalidad="individual";
+const teamKey=()=>TEAM.modalidad+":"+[TEAM.c1,TEAM.c2].filter(Boolean).sort().join("+");
+const unlocked=id=>id===1||CFG.desbloquear||((PROG.turns[id-1]||{}).stars||0)>=1;
+const T=()=>TURNS[CUR-1];
+function saveProg(){store.set("prog."+teamKey(),PROG)}
+function totStars(){let s=0;for(const k in PROG.turns)s+=PROG.turns[k].stars||0;return s}
+
+/* ---------- registro de uso ---------- */
+const COLS=['fecha','tipo','planta','version','modalidad','equipo','nombre1','codigo1','nombre2','codigo2','grupo','turno','producto','intento','estrellas','puntos','prediccion','valor_real','prediccion_ok','inocuidad_ok','norma_ok','cliente_ok','eficiencia_ok','fallas','indicador','tiempo_turno_s','tiempo_activo_total_s','tiempo_sesion_s','variables'];
+function baseRow(tipo){const now=new Date();return {fecha:now.toISOString(),tipo,planta:PLANTA,version:VERSION,modalidad:TEAM.modalidad,equipo:[TEAM.n1,TEAM.n2].filter(Boolean).join(" / "),nombre1:TEAM.n1,codigo1:TEAM.c1,nombre2:TEAM.n2||"",codigo2:TEAM.c2||"",grupo:TEAM.grupo,
+ tiempo_activo_total_s:PROG.active||0,tiempo_sesion_s:Math.round((Date.now()-sessionStart)/1000)}}
+function sendRow(row,beacon){
+ const log=store.get("log",[]);log.push(row);if(log.length>6000)log.splice(0,log.length-6000);store.set("log",log);
+ if(!SHEET_WEBAPP_URL)return;
+ const body=JSON.stringify(row);
+ if(beacon&&navigator.sendBeacon){navigator.sendBeacon(SHEET_WEBAPP_URL,new Blob([body],{type:"text/plain"}));return}
+ fetch(SHEET_WEBAPP_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body}).catch(()=>{const q=store.get("queue",[]);q.push(row);store.set("queue",q)})}
+function flushQueue(){if(!SHEET_WEBAPP_URL)return;const q=store.get("queue",[]);if(!q.length)return;store.set("queue",[]);
+ q.forEach(row=>fetch(SHEET_WEBAPP_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(row)}).catch(()=>{const q2=store.get("queue",[]);q2.push(row);store.set("queue",q2)}))}
+addEventListener("online",flushQueue);
+
+/* ---------- tiempo activo ---------- */
+["keydown","pointermove","pointerdown","wheel"].forEach(e=>addEventListener(e,()=>lastAct=Date.now(),{passive:true}));
+setInterval(()=>{if(!TEAM)return;if(document.visibilityState==="visible"&&Date.now()-lastAct<120000){PROG.active=(PROG.active||0)+1;const tt=PROG.turns[CUR]||(PROG.turns[CUR]={});tt.time=(tt.time||0)+1;if(PROG.active%15===0)saveProg()}
+ $("chipTime").innerHTML="⏱ <b>"+hms(PROG.active||0)+"</b>"},1000);
+
+/* ===================== INGRESO ===================== */
+document.querySelectorAll("#segMod button").forEach(b=>b.onclick=()=>{modalidad=b.dataset.m;document.querySelectorAll("#segMod button").forEach(x=>x.classList.toggle("on",x===b));document.querySelectorAll(".p2").forEach(x=>x.hidden=modalidad!=="pareja")});
+const last=store.get("lastTeam",null);
+if(last){["n1","c1","n2","c2"].forEach(k=>$(k).value=last[k]||"");$("grp").value=last.grupo||"";if(last.modalidad==="pareja")document.querySelector('#segMod [data-m="pareja"]').click()}
+$("btnEnter").onclick=()=>{
+ const g=k=>$(k).value.trim().replace(/\s+/g," ");
+ const t={modalidad,n1:g("n1"),c1:g("c1").replace(/\s/g,""),n2:modalidad==="pareja"?g("n2"):"",c2:modalidad==="pareja"?g("c2").replace(/\s/g,""):"",grupo:g("grp")};
+ const err=[];if(t.n1.split(" ").length<2)err.push("Escribe nombre y apellido.");if(!/^\d{5,14}$/.test(t.c1))err.push("El código debe tener solo números (5 a 14 dígitos).");
+ if(modalidad==="pareja"){if(t.n2.split(" ").length<2)err.push("Escribe nombre y apellido del integrante 2.");if(!/^\d{5,14}$/.test(t.c2))err.push("Revisa el código del integrante 2.");if(t.c1===t.c2)err.push("Los dos códigos son iguales.")}
+ if(!t.grupo)err.push("Escribe el grupo.");
+ if(err.length){$("loginErr").hidden=false;$("loginErr").innerHTML=err.join("<br>");return}
+ $("loginErr").hidden=true;TEAM=t;store.set("lastTeam",t);
+ PROG=store.get("prog."+teamKey(),{cur:1,turns:{},active:0});
+ sessionStart=Date.now();
+ sendRow({...baseRow("ingreso")});flushQueue();
+ $("ovLogin").hidden=true;["top","panel","minimap","keys"].forEach(k=>$(k).hidden=false);
+ $("chipTeam").innerHTML="👥 <b>"+esc([t.n1,t.n2].filter(Boolean).map(n=>n.split(" ")[0]).join(" y "))+"</b> · G"+esc(t.grupo);
+ startWorld();setTurn(Math.min(PROG.cur||1,NT));
+};
+$("btnExit").onclick=()=>{if(!TEAM)return;endSession();location.reload()};
+function endSession(beacon){if(!TEAM)return;saveProg();sendRow({...baseRow("sesion"),turno:CUR},beacon)}
+addEventListener("pagehide",()=>{if(TEAM&&!endSession._done){endSession._done=true;endSession(true)}});
+
+/* ===================== TURNOS Y PANEL ===================== */
+function setTurn(id){
+ if(!unlocked(id)){toast("Ese turno se habilita cuando el anterior tenga al menos una estrella.");return}
+ CUR=id;PROG.cur=id;const t=T();const tt=PROG.turns[id]||(PROG.turns[id]={});
+ VARS={};t.inputs.forEach(i=>VARS[i.k]=(tt.vars&&i.k in tt.vars)?tt.vars[i.k]:i.def);
+ VISITED=new Set();PRED="";saveProg();renderPanel();updateMarkers();updateChips();
+}
+function updateChips(){$("chipStars").innerHTML=`<span class="star">★</span> <b>${totStars()}</b> / ${NT*3}`}
+function renderPanel(){
+ const t=T(),tt=PROG.turns[CUR]||{};
+ $("pTag").outerHTML=`<span id="pTag">${prodTag(t.product)}</span>`;
+ $("pNum").textContent=`Turno ${CUR} de ${NT}`;$("pStars").innerHTML=stars(tt.stars||0);
+ const needSt=[...new Set(t.inputs.map(i=>i.st))];
+ const allV=needSt.every(s=>VISITED.has(s));
+ const predOk=PRED!==""&&isFinite(+PRED.replace(",","."));
+ let h=`<h2>${esc(t.title)}</h2><p>${esc(t.brief)}</p>
+ <details><summary>Concepto</summary><p>${esc(t.concept)}</p></details>
+ <h3>Orden de producción</h3><table class="kv">${t.order.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>
+ <h3>Lote</h3><table class="kv">${t.lot.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>`;
+ if(t.priceKeys.length)h+=`<h3>Precios vigentes</h3><table class="kv">${t.priceKeys.map(k=>`<tr><td>${esc(PRICES_DEF[k].l)}</td><td>${money(PR[k]).replace("$ ","$ ")} ${esc(PRICES_DEF[k].u.replace("$",""))}</td></tr>`).join("")}</table>`;
+ h+=`<h3>Variables del turno</h3>`;
+ for(const i of t.inputs){const v=VISITED.has(i.st);h+=`<div class="var"><div class="vh"><b>${esc(i.l)}</b><button class="ghost" data-go="${i.st}">Ir</button></div>
+  <div class="st">${esc(ST[i.st].n)} · ${v?`<span class="val">${fmt(VARS[i.k],decs(i.step))} ${esc(i.u)}</span> <span class="hint">(cámbiala en el tablero del equipo)</span>`:`<span class="lock">🔒 visita la estación para fijarla</span>`}</div></div>`}
+ h+=`<h3>Predicción</h3><div class="hint">${esc(t.predict.l)} · tolerancia ±${fmt(t.predict.tol*100,1)} %</div>
+ <div class="pred"><input id="predIn" inputmode="decimal" placeholder="valor" value="${esc(PRED)}"><span>${esc(t.predict.u)}</span></div>
+ <div style="margin-top:12px" class="row"><button class="pri" id="btnProd" ${allV&&predOk?"":"disabled"}>Producir lote</button><span class="hint">${allV?(predOk?"":"Escribe tu predicción."):"Visita todas las estaciones del turno."}</span></div>`;
+ if(tt.attempts)h+=`<div class="msg">Intentos: <b>${tt.attempts}</b> · mejor resultado ${stars(tt.stars||0)} · <b>${tt.points||0}</b> puntos</div>`;
+ const nx=CUR<NT&&unlocked(CUR+1);
+ h+=`<div class="row" style="margin-top:10px"><button class="ghost" id="pPrev" ${CUR>1?"":"disabled"}>◂ Anterior</button><span class="sp"></span><button class="ghost" id="pNext" ${nx?"":"disabled"}>Siguiente ▸</button></div>`;
+ $("pBody").innerHTML=h;
+ $("pBody").querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>goTo(b.dataset.go));
+ const pi=$("predIn");pi.oninput=()=>{PRED=pi.value.trim();const ok=PRED!==""&&isFinite(+PRED.replace(",","."));const b=$("btnProd");b.disabled=!(ok&&allV);b.nextElementSibling.textContent=allV?(ok?"":"Escribe tu predicción."):"Visita todas las estaciones del turno."};
+ pi.onkeydown=e=>{e.stopPropagation();if(e.key==="Enter"&&!$("btnProd").disabled)produce()};
+ $("btnProd").onclick=produce;$("pPrev").onclick=()=>setTurn(CUR-1);$("pNext").onclick=()=>setTurn(CUR+1);
+}
+const sig=v=>Math.abs(v)>=100?1:Math.abs(v)>=10?2:3;
+const decs=s=>s>=1?0:s>=0.1?1:s>=0.01?2:3;
+$("btnMin").onclick=()=>{$("panel").classList.toggle("min");$("btnMin").textContent=$("panel").classList.contains("min")?"▴":"▾"};
+
+/* ---------- producir lote ---------- */
+const CATS=[["seg","Inocuidad y seguridad"],["norma","Norma y estándar"],["cliente","Orden del cliente"],["efic","Eficiencia"]];
+function produce(){
+ const t=T();const tt=PROG.turns[CUR]||(PROG.turns[CUR]={});
+ const p={...(t.fixed||{}),...VARS};const r=t.sim(p);const ch=t.checks(r);
+ const catOk=c=>ch.filter(x=>x.cat===c).every(x=>x.ok);
+ // la eficiencia solo se califica en un lote que ya cumple inocuidad, norma y cliente
+ if(!(catOk("seg")&&catOk("norma")&&catOk("cliente")))ch.filter(x=>x.cat==="efic").forEach(x=>{x.ok=false;x.d="sin calificar";x.h="La eficiencia se califica cuando el lote cumple inocuidad, seguridad, norma y la orden del cliente."});
+ const pred=+PRED.replace(",",".");const real=t.predict.get(r);
+ const predOK=Math.abs(pred-real)<=t.predict.tol*Math.abs(real)+1e-12;
+ const s1=catOk("seg")&&catOk("norma"),s2=s1&&catOk("cliente"),s3=s2&&catOk("efic")&&predOK;
+ const st=s3?3:s2?2:s1?1:0;
+ tt.attempts=(tt.attempts||0)+1;
+ const pts=Math.max(0,st*100+(predOK?50:0)-10*(tt.attempts-1));
+ const better=st>(tt.stars||0)||(st===(tt.stars||0)&&pts>(tt.points||0));
+ if(better){tt.stars=st;tt.points=pts}
+ tt.vars={...VARS};saveProg();updateChips();
+ const eff=ch.find(x=>x.cat==="efic");
+ sendRow({...baseRow("lote"),turno:CUR,producto:t.product,intento:tt.attempts,estrellas:st,puntos:pts,prediccion:pred,valor_real:+real.toPrecision(6),prediccion_ok:predOK?1:0,
+  inocuidad_ok:catOk("seg")?1:0,norma_ok:catOk("norma")?1:0,cliente_ok:catOk("cliente")?1:0,eficiencia_ok:catOk("efic")?1:0,
+  fallas:ch.filter(x=>!x.ok).map(x=>x.label).join(" | "),indicador:eff?eff.d:"",tiempo_turno_s:tt.time||0,
+  variables:t.inputs.map(i=>`${i.s}=${fmt(VARS[i.k],decs(i.step))} ${i.u}`.trim()).join("; ")});
+ // tarjeta de resultado
+ let h=`<div class="row"><div style="flex:1">${prodTag(t.product)}<h1>Turno ${CUR}: ${esc(t.title)}</h1></div><div class="bigStars">${stars(st)}</div></div>
+ <div class="msg">Intento ${tt.attempts} · <b>${pts}</b> puntos${better&&tt.attempts>1?" · ¡nuevo mejor resultado!":""}</div>
+ <div class="msg ${predOK?"":"err"}">Predicción: <b>${fmt(pred,sig(real))} ${esc(t.predict.u)}</b> · valor real <b>${fmt(real,sig(real))} ${esc(t.predict.u)}</b> · ${predOK?"dentro de la tolerancia (+50)":"fuera de la tolerancia de ±"+fmt(t.predict.tol*100,1)+" %"}</div><div class="res">`;
+ for(const [c,n] of CATS){const L=ch.filter(x=>x.cat===c);if(!L.length)continue;h+=`<div class="catH">${n}</div>`;
+  for(const x of L){h+=`<span class="${x.ok?"ok":"no"}">${x.ok?"✓":"✗"}</span><span>${esc(x.label)}</span><b>${esc(x.d)}</b>`;if(!x.ok&&x.h)h+=`<div class="h">${esc(x.h)}</div>`}}
+ h+=`</div><p class="hint" style="margin-top:10px">${st===3?"Turno completo.":st===2?"Para la tercera estrella: proceso eficiente y predicción dentro de la tolerancia.":st===1?"Para la segunda estrella cumple la orden del cliente.":"Sin estrella: revisa inocuidad, seguridad y norma."}</p>
+ <div class="row" style="margin-top:12px"><button id="rRetry">Ajustar y reintentar</button><span class="sp"></span>${CUR<NT&&unlocked(CUR+1)?`<button class="pri" id="rNext">Siguiente turno ▸</button>`:""}</div>`;
+ $("resCard").innerHTML=h;$("ovResult").hidden=false;
+ $("rRetry").onclick=()=>{$("ovResult").hidden=true;renderPanel()};
+ if($("rNext"))$("rNext").onclick=()=>{$("ovResult").hidden=true;setTurn(CUR+1)};
+ renderPanel();
+}
+
+/* ---------- lista de turnos ---------- */
+function openTurns(){let h="";TURNS.forEach(t=>{const tt=PROG.turns[t.id]||{};const u=unlocked(t.id);
+ h+=`<button class="tcell ${t.id===CUR?"cur":""}" data-t="${t.id}" ${u?"":"disabled"}><div class="row"><b style="flex:1">Turno ${t.id}</b>${stars(tt.stars||0)}</div><div style="margin:4px 0">${esc(t.title)}</div>${prodTag(t.product)} <span class="hint">${tt.attempts?tt.attempts+" intento(s)":u?"":"🔒"}</span></button>`});
+ $("tGrid").innerHTML=h;$("tGrid").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{$("ovTurns").hidden=true;setTurn(+b.dataset.t)});$("ovTurns").hidden=false}
+$("btnTurns").onclick=openTurns;$("btnHelp").onclick=()=>$("ovHelp").hidden=false;
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest(".ov").hidden=true);
+document.querySelectorAll(".ov").forEach(o=>o.addEventListener("pointerdown",e=>{if(e.target===o&&o.id!=="ovLogin")o.hidden=true}));
+
+/* ===================== ESTACIONES (datos) ===================== */
+const ST={
+ bas:{n:"Báscula y laboratorio de caña",p:[-64,40],r:9,vp:[-50,46],d:"Los camiones se pesan al entrar y al salir. La sonda saca un núcleo de caña de cada viaje; el laboratorio mide Brix, pol, fibra y materia extraña, con lo que se paga la caña al cultivador."},
+ prep:{n:"Mesa alimentadora y desfibrador",p:[-64,16],r:8,vp:[-50,14],d:"La mesa inclinada descarga la caña al conductor. Las picadoras la trozan y el desfibrador de martillos rompe las células del tallo. El índice de preparación es la fracción de células abiertas."},
+ mol:{n:"Tándem de molinos",p:[-64,-14],r:12,vp:[-50,-10],d:"Seis molinos de tres mazas exprimen la caña desfibrada. El agua de imbibición entra antes del último molino y el jugo de cada molino se recircula hacia el anterior (imbibición compuesta)."},
+ cald:{n:"Caldera de bagazo y turbogenerador",p:[-30,-46],r:14,vp:[-42,-30],d:"Caldera acuotubular de parrilla viajera: quema bagazo húmedo y produce vapor a 63 bar y 480 °C. El turbogenerador de contrapresión entrega vapor de escape a la fábrica y energía a la red."},
+ clar:{n:"Calentadores y clarificador",p:[-28,-12],r:9,vp:[-28,2],d:"Intercambiadores de tubo y coraza calientan el jugo encalado; el tanque flash elimina el aire y el clarificador de bandejas decanta la cachaza. La lechada de cal se dosifica por control de pH."},
+ sulf:{n:"Torre de sulfitación",p:[-28,12],r:5,vp:[-36,14],d:"El azufre se quema en un horno rotatorio y el SO₂ asciende por la torre en contracorriente con el jugo de la línea blanca."},
+ evap:{n:"Evaporador de quíntuple efecto",p:[-2,-14],r:11,vp:[-2,2],d:"Cinco cuerpos tipo Robert en serie: el vapor de escape calienta el primero y el vapor vegetal de cada cuerpo calienta el siguiente, hasta el condensador barométrico."},
+ tach:{n:"Tachos al vacío",p:[22,-14],r:10,vp:[24,-30],d:"Tachos de calandria donde la meladura se concentra hasta sobresaturarse y crecer los cristales sobre la semilla (sistema de tres masas A, B y C)."},
+ cent:{n:"Centrífugas",p:[24,9],r:9,vp:[24,22],d:"Centrífugas de carga automáticas: separan el cristal de la miel y lo lavan con agua. La miel final pasa a la destilería."},
+ sec:{n:"Secadora y enfriadora",p:[6,25],r:9,vp:[6,40],d:"Secadora rotatoria de aire caliente seguida de un enfriador de lecho fluidizado y un ciclón para el polvo."},
+ emp:{n:"Empaque y bodega",p:[-16,29],r:9,vp:[-16,43],d:"Llenadora de bolsas de 1 kg para azúcar morena y ensacadora de bultos de 50 kg para azúcar blanca, con control de peso en línea."},
+ ferm:{n:"Fermentadores Melle-Boinot",p:[50,-14],r:12,vp:[50,4],d:"Cuatro fermentadores de 800 m³ con intercambiadores de placas para retirar el calor. La levadura se separa del vino en centrífugas y se trata con ácido sulfúrico antes de volver."},
+ dest:{n:"Columnas de destilación",p:[68,-16],r:7,vp:[77,-18],d:"La columna destiladora agota el vino y la rectificadora concentra el etanol hasta cerca del azeótropo; por el fondo sale la vinaza."},
+ desh:{n:"Tamices moleculares",p:[68,8],r:5,vp:[58,12],d:"Dos lechos de zeolita 3A trabajan en alternancia: uno adsorbe el agua del etanol sobrecalentado mientras el otro se regenera al vacío."},
+ vin:{n:"Evaporador de vinaza y fertirriego",p:[60,-46],r:11,vp:[60,-30],d:"Evaporador de múltiple efecto para concentrar la vinaza y piscina de almacenamiento desde donde salen los carrotanques al campo."}
+};
+function stationUse(k){return TURNS.filter(t=>t.inputs.some(i=>i.st===k)).map(t=>t.id)}
+
+/* ===================== MUNDO 3D ===================== */
+let renderer,scene,camera,clock,started=false;
+const player={x:0,z:52,yaw:0,pitch:-0.04};
+const keys={};const OBST=[];const PICK=[];const MARK={};let NAVES=[];
+const M={};
+function mat(color,o={}){return new THREE.MeshStandardMaterial({color,envMapIntensity:o.env??0.55,roughness:o.r??0.6,metalness:o.m??0.1,...(o.e?{emissive:o.e,emissiveIntensity:o.ei??1}:{}),...(o.t?{transparent:true,opacity:o.t}:{}),side:o.ds?THREE.DoubleSide:THREE.FrontSide})}
+function startWorld(){
+ if(started)return;started=true;
+ const cv=$("view");
+ renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+ renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);
+ renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=0.82;
+ renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ scene=new THREE.Scene();
+ const sky=document.createElement("canvas");sky.width=2;sky.height=256;const sg=sky.getContext("2d");const gr=sg.createLinearGradient(0,0,0,256);gr.addColorStop(0,"#5f97c9");gr.addColorStop(0.55,"#b9d3e6");gr.addColorStop(1,"#e9eadf");sg.fillStyle=gr;sg.fillRect(0,0,2,256);
+ const skyT=new THREE.CanvasTexture(sky);skyT.encoding=THREE.sRGBEncoding;scene.background=skyT;
+ scene.fog=new THREE.Fog(0xcfdde3,110,260);
+ camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.1,600);camera.rotation.order="YXZ";
+ try{const pm=new THREE.PMREMGenerator(renderer);scene.environment=pm.fromScene(new THREE.RoomEnvironment(),0.04).texture}catch(e){}
+ scene.add(new THREE.HemisphereLight(0xdfefff,0x5a5240,0.35));
+ const sun=new THREE.DirectionalLight(0xfff2dd,1.35);sun.position.set(-60,110,50);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+ const sc=sun.shadow.camera;sc.left=-110;sc.right=110;sc.top=90;sc.bottom=-90;sc.near=10;sc.far=300;sun.shadow.bias=-0.0006;scene.add(sun);
+ Object.assign(M,{
+  steel:mat(0x8f999e,{m:0.75,r:0.38}),inox:mat(0xd3d9dc,{m:0.9,r:0.22}),green:mat(0x2f6b3a,{m:0.3,r:0.5}),blue:mat(0x2f5f8f,{m:0.3,r:0.5}),
+  yellow:mat(0xe5b622,{m:0.2,r:0.5}),red:mat(0xb23a2c,{m:0.3,r:0.5}),dark:mat(0x2b2f31,{m:0.5,r:0.5}),concrete:mat(0x9f9b92,{r:0.9}),
+  white:mat(0xe4e1d6,{r:0.7}),brick:mat(0x9b5a3c,{r:0.85}),cane:mat(0x8fa83a,{r:0.8}),caneDry:mat(0xb59a52,{r:0.85}),bagM:mat(0xa86a35,{r:0.8}),bagW:mat(0xf3f1ea,{r:0.75}),
+  glass:mat(0x9fc6d8,{m:0.1,r:0.1,t:0.35}),roof:mat(0x8e979b,{m:0.5,r:0.55,ds:true,env:0.3}),water:mat(0x4a3a22,{m:0.1,r:0.15}),juice:mat(0xb08a3a,{r:0.3}),
+  orange:mat(0xd9792b,{m:0.2,r:0.5}),insul:mat(0xc7c2b4,{m:0.2,r:0.7})});
+ buildGround();buildNaves();buildStations();buildPipes();buildCaneFields();
+ addEventListener("resize",()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()});
+ bindInput();clock=new THREE.Clock();loop();
+}
+/* --- primitivas --- */
+function add(m,parent,shadow=true){if(shadow){m.castShadow=true;m.receiveShadow=true}(parent||scene).add(m);return m}
+function box(w,h,d,mt,x,y,z,parent,sh){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mt);m.position.set(x,y,z);return add(m,parent,sh)}
+function rbox(w,h,d,mt,x,y,z,parent){const g=THREE.RoundedBoxGeometry?new THREE.RoundedBoxGeometry(w,h,d,3,Math.min(w,h,d)*0.08):new THREE.BoxGeometry(w,h,d);const m=new THREE.Mesh(g,mt);m.position.set(x,y,z);return add(m,parent)}
+function cyl(rt,rb,h,mt,x,y,z,parent,seg=28){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),mt);m.position.set(x,y,z);return add(m,parent)}
+function hcyl(r,len,mt,x,y,z,axis,parent,seg=28){const m=cyl(r,r,len,mt,x,y,z,parent,seg);if(axis==="x")m.rotation.z=Math.PI/2;else m.rotation.x=Math.PI/2;return m}
+function sph(r,mt,x,y,z,parent){const m=new THREE.Mesh(new THREE.SphereGeometry(r,24,16,0,Math.PI*2,0,Math.PI/2),mt);m.position.set(x,y,z);return add(m,parent)}
+function cone(r,h,mt,x,y,z,parent,down){const m=cyl(down?r:0.15,down?0.15:r,h,mt,x,y,z,parent);return m}
+function tank(r,h,mt,x,z,parent,y0=0,cap=true){cyl(r,r,h,mt,x,y0+h/2,z,parent);if(cap)sph(r,mt,x,y0+h,z,parent).scale.y=0.35;return h}
+function legs(x,z,r,h,parent){for(let a=0;a<4;a++){const ang=a*Math.PI/2+Math.PI/4;cyl(0.12,0.12,h,M.steel,x+Math.cos(ang)*r,h/2,z+Math.sin(ang)*r,parent,8)}}
+function platform(x,z,w,d,h,parent){box(w,0.18,d,M.steel,x,h,z,parent);for(const [dx,dz] of [[-1,-1],[1,-1],[-1,1],[1,1]])box(0.25,h,0.25,M.yellow,x+dx*(w/2-0.2),h/2,z+dz*(d/2-0.2),parent);
+ for(const s of [-1,1]){box(w,0.06,0.06,M.yellow,x,h+1.05,z+s*d/2,parent);box(0.06,0.06,d,M.yellow,x+s*w/2,h+1.05,z,parent)}}
+function stairs(x,z,h,dir,parent){const n=Math.round(h/0.25);for(let i=0;i<n;i++){box(1.1,0.08,0.3,M.steel,x,0.2+i*0.25,z+dir*(i*0.27),parent,false)}box(0.06,0.06,n*0.3,M.yellow,x+0.55,h/2+0.9,z+dir*n*0.135,parent).rotation.x=dir*Math.atan(0.25/0.27)}
+function label(text,sub,col="#7bb342"){const c=document.createElement("canvas");c.width=1024;c.height=200;const g=c.getContext("2d");
+ g.fillStyle="rgba(12,22,15,0.86)";const r=36;g.beginPath();g.moveTo(r,0);g.arcTo(1024,0,1024,200,r);g.arcTo(1024,200,0,200,r);g.arcTo(0,200,0,0,r);g.arcTo(0,0,1024,0,r);g.fill();
+ g.fillStyle=col;g.fillRect(0,0,14,200);g.fillStyle="#eef3e8";g.font="700 58px Segoe UI, Arial";g.textBaseline="middle";g.fillText(text,40,sub?72:100,960);
+ if(sub){g.fillStyle="#a9b9a6";g.font="40px Segoe UI, Arial";g.fillText(sub,40,145,960)}
+ const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthWrite:false}));s.scale.set(10,1.95,1);return s}
+function pipe(pts,r,mt){const path=new THREE.CurvePath();for(let i=0;i<pts.length-1;i++)path.add(new THREE.LineCurve3(new THREE.Vector3(...pts[i]),new THREE.Vector3(...pts[i+1])));
+ const m=new THREE.Mesh(new THREE.TubeGeometry(path,pts.length*8,r,10,false),mt);m.castShadow=true;scene.add(m);return m}
+/* --- suelo --- */
+function texCanvas(w,h,fn,rep){const c=document.createElement("canvas");c.width=w;c.height=h;fn(c.getContext("2d"),w,h);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;if(rep)t.repeat.set(...rep);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t}
+function noise(g,w,h,base,n,a){g.fillStyle=base;g.fillRect(0,0,w,h);for(let i=0;i<n;i++){g.fillStyle=`rgba(${Math.random()<0.5?"0,0,0":"255,255,255"},${Math.random()*a})`;g.fillRect(Math.random()*w,Math.random()*h,2,2)}}
+function buildGround(){
+ const asph=texCanvas(256,256,(g,w,h)=>noise(g,w,h,"#6f6c63",5000,0.18),[60,45]);
+ const gnd=new THREE.Mesh(new THREE.PlaneGeometry(260,190),new THREE.MeshStandardMaterial({map:asph,roughness:0.95}));gnd.rotation.x=-Math.PI/2;gnd.receiveShadow=true;scene.add(gnd);
+ const conc=texCanvas(256,256,(g,w,h)=>{noise(g,w,h,"#a29e94",3000,0.12);g.strokeStyle="rgba(0,0,0,0.18)";g.lineWidth=2;g.strokeRect(0,0,w,h)},[1,1]);
+ const slab=(x,z,w,d)=>{const t=conc.clone();t.needsUpdate=true;t.repeat.set(w/6,d/6);const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshStandardMaterial({map:t,roughness:0.9}));m.rotation.x=-Math.PI/2;m.position.set(x,0.02,z);m.receiveShadow=true;scene.add(m)};
+ slab(-64,13,30,82);slab(-2,4,84,70);slab(56,-14,52,58);slab(-26,-46,40,24);slab(60,-46,40,22);
+ // senderos peatonales
+ const walk=mat(0xe2c23a,{r:0.6});
+ const line=(x1,z1,x2,z2)=>{const L=Math.hypot(x2-x1,z2-z1);const m=new THREE.Mesh(new THREE.PlaneGeometry(0.25,L),walk);m.rotation.x=-Math.PI/2;m.rotation.z=-Math.atan2(x2-x1,z2-z1);m.position.set((x1+x2)/2,0.04,(z1+z2)/2);scene.add(m)};
+ for(const o of [-1.6,1.6]){line(-90+0,48+o,86,48+o);line(-46+o,-60,-46+o,52);line(38+o,-60,38+o,52);line(-90,-30+o,86,-30+o)}
+}
+function buildNaves(){
+ const nave=(x,z,w,d,h,name)=>{const g=new THREE.Group();scene.add(g);
+  for(let i=0;i<=Math.round(w/12);i++)for(const s of [-1,1]){const cx=x-w/2+i*w/Math.round(w/12);box(0.5,h,0.5,M.steel,cx,h/2,z+s*d/2,g)}
+  for(let j=0;j<=Math.round(d/12);j++)for(const s of [-1,1]){const cz=z-d/2+j*d/Math.round(d/12);box(0.5,h,0.5,M.steel,x+s*w/2,h/2,cz,g)}
+  const n=Math.round(w/12);for(let i=0;i<=n;i++){const cx=x-w/2+i*w/n;box(0.35,0.6,d,M.steel,cx,h,z,g,false)}
+  const roof=new THREE.Mesh(new THREE.PlaneGeometry(w+2,d+2),M.roof);roof.rotation.x=Math.PI/2;roof.position.set(x,h+0.35,z);scene.add(roof);
+  // franja de luz cenital
+  const sk=new THREE.Mesh(new THREE.PlaneGeometry(w*0.9,2),mat(0xffffff,{e:0xfff6e0,ei:0.25}));sk.rotation.x=Math.PI/2;sk.position.set(x,h+0.3,z);scene.add(sk);
+  const lb=label(name,"",'#e8a93a');lb.position.set(x,h+2.4,z+d/2);lb.scale.set(16,3.1,1);scene.add(lb);
+  NAVES.push({x,z,w,d,name})};
+ nave(-64,13,26,78,16,"Patio y molienda");nave(-2,4,80,66,20,"Casa de cocimiento");
+ const pl=new THREE.PointLight(0xfff1d6,0.6,90);pl.position.set(-2,17,4);scene.add(pl);
+ const pl2=new THREE.PointLight(0xfff1d6,0.5,80);pl2.position.set(-64,13,10);scene.add(pl2);
+ // portería
+ box(8,4,6,M.white,-10,2,62,null);box(8.4,0.3,6.4,M.green,-10,4.15,62);
+ const g=label("CañaLab · Biorrefinería de caña","Universidad Surcolombiana · Ingeniería Agroindustrial","#7bb342");g.position.set(-10,7,58.5);g.scale.set(18,3.5,1);scene.add(g);
+}
+function buildCaneFields(){
+ const n=5200;const geo=new THREE.CylinderGeometry(0.03,0.05,1,5);geo.translate(0,0.5,0);
+ const im=new THREE.InstancedMesh(geo,mat(0x6f9a33,{r:0.85}),n);const d=new THREE.Object3D();let k=0;
+ const zones=[[-125,-120,-95,95],[95,125,-95,95],[-125,125,70,95],[-125,125,-95,-72]];
+ while(k<n){const z=zones[k%4];const x=z[0]+Math.random()*(z[1]-z[0]),y=z[2]+Math.random()*(z[3]-z[2]);
+  d.position.set(x,0,y);d.scale.set(1,2.2+Math.random()*1.6,1);d.rotation.set((Math.random()-0.5)*0.25,0,(Math.random()-0.5)*0.25);d.updateMatrix();im.setMatrixAt(k++,d.matrix)}
+ scene.add(im);
+ const gr=new THREE.Mesh(new THREE.PlaneGeometry(600,600),mat(0x58743a,{r:1}));gr.rotation.x=-Math.PI/2;gr.position.y=-0.05;scene.add(gr);
+ // montañas del fondo (cordillera)
+ const mt=mat(0x6b8a74,{r:1});for(let i=0;i<18;i++){const a=i/18*Math.PI*2;const r=330;const h=30+Math.random()*45;const m=new THREE.Mesh(new THREE.ConeGeometry(70+Math.random()*40,h,6),mt);m.position.set(Math.cos(a)*r,h/2-4,Math.sin(a)*r);scene.add(m)}
+}
+/* --- equipos por estación --- */
+function stGroup(k){const g=new THREE.Group();const [x,z]=ST[k].p;g.position.set(x,0,z);g.userData.st=k;scene.add(g);PICK.push(g);OBST.push({x,z,r:ST[k].r});return g}
+function buildStations(){
+ // 1 báscula y laboratorio
+ let g=stGroup("bas");
+ box(18,0.35,4,M.steel,0,0.18,-2,g);box(3.4,3,2.6,M.white,0,1.5,3.5,g); box(3.0,1.0,0.1,M.glass,0,2.1,4.82,g);
+ truck(g,-3,-2,true);
+ const sonda=new THREE.Group();g.add(sonda);sonda.position.set(6,0,-6);box(0.4,7,0.4,M.yellow,0,3.5,0,sonda);box(6,0.4,0.4,M.yellow,-3,7,0,sonda);hcyl(0.18,4,M.inox,-5,5,0,"y",sonda).rotation.set(0.35,0,0);
+ box(8,3.2,5,M.white,-8,1.6,4,g);box(7.6,1.0,0.1,M.glass,-8,2.0,6.52,g);box(8.4,0.3,5.4,M.green,-8,3.35,4,g);
+ // 2 preparación
+ g=stGroup("prep");
+ const mesa=box(10,0.5,12,M.steel,0,2.2,2,g);mesa.rotation.x=-0.22;for(let i=0;i<40;i++){const c=hcyl(0.05,10,M.caneDry,(Math.random()-0.5)*9,3.0+Math.random()*0.6,2+(Math.random()-0.5)*10,"x",g,6);c.rotation.y=(Math.random()-0.5)*0.3}
+ box(3,0.4,22,M.steel,0,3.4,-8,g);box(4.5,4.5,4,M.green,0,5.5,-4,g);box(4.5,4.5,4,M.green,0,5.5,-12,g);hcyl(1.6,4.6,M.dark,0,5.5,-12,"x",g);
+ box(2.6,1.6,2.0,M.blue,3.8,4.6,-12,g);for(let i=0;i<6;i++)box(2.4,0.2,0.4,M.caneDry,0,3.7,-1-i*2.8,g);
+ // 3 molinos
+ g=stGroup("mol");
+ for(let i=0;i<6;i++){const zz=12-i*4.8;const m=new THREE.Group();g.add(m);m.position.set(0,0,zz);
+  box(0.8,5.5,3.2,M.green,-2.4,2.75,0,m);box(0.8,5.5,3.2,M.green,2.4,2.75,0,m);
+  hcyl(0.75,4,M.steel,0,3.6,0.9,"x",m);hcyl(0.75,4,M.steel,0,3.6,-0.9,"x",m);hcyl(0.75,4,M.steel,0,5.0,0,"x",m);
+  box(2.2,1.8,2.6,M.blue,4.6,1.0,0,m);hcyl(0.5,1.6,M.dark,3.2,1.2,0,"x",m);box(4.2,0.6,1.8,M.juice,0,0.3,0,m,false);
+  if(i<5){const c=box(3,0.25,3.2,M.steel,0,4.4,-2.4,m);c.rotation.x=0.35}}
+ platform(0,0,9,30,6.2,g);stairs(-4.0,15.5,6.2,-1,g);
+ // 4 caldera y turbogenerador
+ g=stGroup("cald");
+ rbox(14,16,10,mat(0x77858d,{m:0.5,r:0.45}),0,8,0,g);box(14.2,0.6,10.2,M.red,0,16.3,0,g);for(let i=0;i<4;i++)box(14.15,0.25,10.15,M.steel,0,3.5+i*3.4,0,g,false);for(const sx of [-7.4,7.4])for(const sz of [-5.4,5.4])box(0.45,17,0.45,M.yellow,sx,8.5,sz,g);box(2.2,2.6,0.2,M.dark,-3,2.2,5.05,g);box(2.2,2.6,0.2,M.dark,3,2.2,5.05,g);cyl(1.8,2.2,46,mat(0x7b7d7a,{r:0.8}),-9,23,2,g);cyl(1.9,1.9,1,M.red,-9,44,2,g);
+ hcyl(1.2,6,M.steel,-4.5,12,2,"x",g);box(3,9,3,M.steel,9.5,4.5,-2,g);sph(1.8,M.inox,0,16.6,-3,g).rotation.x=0;hcyl(1.0,12,M.inox,0,17.4,-3,"x",g);
+ const cb=box(2.4,0.4,24,M.steel,5,10,12,g);cb.rotation.x=0.38;
+ for(let i=0;i<12;i++)box(1.6,0.25,1.2,M.caneDry,5,5.5+i*0.9,22-i*2,g,false);
+ // turbogenerador
+ const tg=new THREE.Group();g.add(tg);tg.position.set(17,0,0);box(12,2,4,M.concrete,0,1,0,tg);hcyl(1.3,4,M.green,-3,3.2,0,"x",tg);cone(1.3,2.4,M.green,-0.2,3.2,0,tg).rotation.z=-Math.PI/2;box(4,2.6,3,M.blue,3.6,3.3,0,tg);hcyl(1.1,2,M.dark,5.8,3.2,0,"x",tg);
+ // 5 clarificación
+ g=stGroup("clar");
+ for(let i=0;i<3;i++){hcyl(0.7,6,M.inox,-3,1.4+i*1.6,-5,"x",g);}box(0.3,5.4,1.6,M.steel,-6.2,2.7,-5,g);
+ tank(4.2,5,M.inox,3,1.5,g,0,false);cone(4.2,1.4,M.inox,3,5.7,1.5,g);cyl(0.5,0.5,1.6,M.dark,3,7.1,1.5,g);
+ tank(1.0,4,M.inox,-5,4,g);tank(1.4,3,M.white,-5,0,g);box(1.2,1.2,1.2,M.dark,-5,3.6,0,g);
+ platform(3,1.5,9.5,9.5,5.2,g);stairs(-1.9,6.4,5.2,1,g);
+ // 6 sulfitación
+ g=stGroup("sulf");
+ cyl(0.9,0.9,12,M.inox,0,6,0,g);cyl(1.1,1.1,0.5,M.yellow,0,12.2,0,g);hcyl(0.9,3.2,mat(0x5a5f62,{m:0.6}),2.6,1.2,1,"x",g);box(1.6,1.6,1.6,M.brick,4.6,0.8,1,g);
+ pipe([[4.4,1.6,1],[4.4,4,1],[0.9,4,0]],0.15,M.yellow);
+ // 7 evaporación
+ g=stGroup("evap");
+ for(let i=0;i<5;i++){const xx=-8+i*4;cyl(1.8,1.8,7,M.inox,xx,4.5,0,g);sph(1.8,M.inox,xx,8,0,g);cone(1.8,1.2,M.inox,xx,0.6,0,g,true);hcyl(0.45,2.5,M.inox,xx,8.6,0,"z",g)}
+ for(let i=0;i<4;i++)pipe([[-8+i*4,9.8,0],[-8+i*4,10.4,0],[-6+i*4,10.4,0],[-6+i*4,6,1.8],[-4+i*4,6,1.8]],0.35,M.inox);
+ cyl(0.7,0.7,10,M.steel,13,6,-1,g);platform(0,0,24,6,4.2,g);stairs(-12.6,3.8,4.2,1,g);
+ // 8 tachos
+ g=stGroup("tach");
+ platform(0,0,20,8,5,g);stairs(-10.6,4.6,5,1,g);
+ for(let i=0;i<3;i++){const xx=-6+i*6;cyl(2.2,2.2,5,M.inox,xx,8,0,g);sph(2.2,M.inox,xx,10.5,0,g);cone(2.2,2,M.inox,xx,4.5,0,g,true);cyl(0.35,0.35,4,M.steel,xx,13,0,g);cyl(0.8,0.8,3,M.steel,xx+1.6,15,0,g);box(0.6,0.6,0.1,M.glass,xx,8,2.21,g)}
+ // 9 centrífugas
+ g=stGroup("cent");
+ platform(0,0,18,7,3.6,g);stairs(-9.6,4.2,3.6,1,g);
+ for(let i=0;i<6;i++){const xx=-7.5+i*3;cyl(1.1,1.1,1.6,i<3?M.inox:M.green,xx,4.6,0,g);cyl(0.5,0.5,1.4,M.blue,xx,6.1,0,g);cone(0.9,1.4,M.inox,xx,3.0,0,g,true)}
+ box(18,0.5,1.2,M.steel,0,1.2,1.5,g);label3(g,"Batería blanca",-4.5,7.6,0,"#f3f1ea");label3(g,"Batería morena",4.5,7.6,0,"#e9b88a");
+ // 10 secado
+ g=stGroup("sec");
+ const dr=hcyl(1.6,12,M.inox,0,3,0,"x",g);dr.rotation.y=0.03;for(const xx of [-4,4])cyl(1.75,1.75,0.5,M.dark,xx,3,0,g).rotation.z=Math.PI/2;
+ box(1.6,2.4,3.6,M.steel,-7,1.2,0,g);box(1.6,2.4,3.6,M.steel,7,1.2,0,g);
+ box(6,1.4,3,M.inox,0,1.0,5,g);cyl(1.0,1.0,3,M.inox,-6,6,5,g);cone(1.0,2,M.inox,-6,3.5,5,g,true);box(2,2,2,M.blue,6.5,1,5,g);
+ // 11 empaque
+ g=stGroup("emp");
+ cyl(1.4,1.4,3,M.inox,-3,5.5,0,g);cone(1.4,1.6,M.inox,-3,3.2,0,g,true);box(2.2,2.4,2.2,M.white,-3,1.2,0,g);
+ box(10,0.9,1.0,M.dark,2,0.8,0,g);for(let i=0;i<6;i++)box(0.42,0.6,0.24,M.bagM,-0.5+i*1.0,1.55,0,g,false);
+ cyl(1.6,1.6,3,M.inox,-3,5.5,-5,g);box(2.4,2.6,2.4,M.blue,-3,1.3,-5,g);box(10,0.9,1.2,M.dark,2,0.8,-5,g);for(let i=0;i<4;i++)box(1.0,0.35,0.6,M.bagW,0+i*1.8,1.45,-5,g,false);
+ for(let s=0;s<2;s++)for(let a=0;a<4;a++)for(let b=0;b<3;b++)for(let c=0;c<5;c++)box(0.95,0.32,0.55,s?M.bagW:M.bagM,9+s*3.6+((c%2)*0.1),0.3+c*0.34,-3.5+a*0.62+b*0,g,false);
+ // 12 fermentación
+ g=stGroup("ferm");
+ for(let i=0;i<4;i++){const xx=-9+i*6;tank(2.6,10,M.inox,xx,-2,g);cyl(0.25,0.25,1.6,M.steel,xx,11.4,-2,g)}
+ for(let i=0;i<2;i++){box(1.2,2.2,0.6,M.blue,-6+i*8,1.1,4.5,g)}cyl(0.9,0.9,1.5,M.inox,8,0.9,5,g);tank(1.6,4,M.white,13,5,g);
+ platform(0,-2,26,6,11,g);stairs(-13.6,1.6,11,1,g);
+ // 13 destilación
+ g=stGroup("dest");
+ cyl(1.3,1.3,26,M.inox,-2.5,13,0,g);sph(1.3,M.inox,-2.5,26,0,g);cyl(1.0,1.0,30,M.inox,2.5,15,0,g);sph(1.0,M.inox,2.5,30,0,g);
+ for(let h=6;h<28;h+=6){platform(0,0,8,4,h,g)}hcyl(0.6,4,M.inox,0,24,3,"x",g);hcyl(0.6,4,M.inox,0,29,3,"x",g);
+ // 14 tamices
+ g=stGroup("desh");
+ for(const xx of [-1.8,1.8]){cyl(1.1,1.1,7,M.inox,xx,4.6,0,g);sph(1.1,M.inox,xx,8.1,0,g);cone(1.1,0.9,M.inox,xx,0.6,0,g,true);legs(xx,0,0.8,1.2,g)}
+ hcyl(0.6,3.6,M.inox,0,2,-3,"x",g);
+ // tanques de etanol (decoración)
+ for(let i=0;i<3;i++){const t=new THREE.Group();scene.add(t);t.position.set(82,0,-4+i*12);tank(4.5,9,M.white,0,0,t);OBST.push({x:82,z:-4+i*12,r:5});box(1.4,1.4,0.1,M.blue,0,6,4.55,t,false)}
+ const et=label("Etanol anhidro","Tanques de almacenamiento","#4a9bd6");et.position.set(82,13,8);scene.add(et);
+ // 15 vinaza
+ g=stGroup("vin");
+ for(let i=0;i<3;i++){cyl(1.5,1.5,7,M.inox,-8+i*4,4.5,-4,g);cone(1.5,1,M.inox,-8+i*4,0.5,-4,g,true)}
+ const pond=new THREE.Mesh(new THREE.BoxGeometry(14,0.3,9),M.water);pond.position.set(4,0.12,2);g.add(pond);box(14.6,0.6,0.4,M.concrete,4,0.3,6.7,g);box(14.6,0.6,0.4,M.concrete,4,0.3,-2.7,g);
+ truck(g,-8,6,false);
+ // etiquetas y marcadores
+ for(const k in ST){const [x,z]=ST[k].p;const h=labelY(k);const l=label(ST[k].n,stationUse(k).length?"Turnos "+stationUse(k).join(", "):"",colorOf(k));l.position.set(x,h,z);scene.add(l);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(ST[k].r+0.9,ST[k].r+1.6,64),new THREE.MeshBasicMaterial({color:0x7bb342,transparent:true,opacity:0.75,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.set(x,0.06,z);ring.visible=false;scene.add(ring);
+  const ar=new THREE.Mesh(new THREE.ConeGeometry(0.8,1.8,4),new THREE.MeshBasicMaterial({color:0x9fe05a}));ar.rotation.x=Math.PI;ar.position.set(x,h+2.2,z);ar.visible=false;scene.add(ar);
+  MARK[k]={ring,ar,h}}
+}
+function label3(g,txt,x,y,z,col){const l=label(txt,"",col);l.position.set(x,y,z);l.scale.set(5,0.98,1);g.add(l)}
+function labelY(k){return {bas:9,prep:10,mol:10,cald:20,clar:10,sulf:15,evap:13,tach:18,cent:9.5,sec:9,emp:9,ferm:15,dest:33,desh:11,vin:10}[k]||10}
+function colorOf(k){const u=stationUse(k).map(i=>TURNS[i-1].product).join(" ");return u.includes("Bioetanol")?"#4a9bd6":u.includes("blanca")&&!u.includes("Común")?"#f3f1ea":"#7bb342"}
+function truck(g,x,z,cane){const t=new THREE.Group();g.add(t);t.position.set(x,0,z);rbox(2.4,2.4,2.6,cane?M.red:M.blue,-4.6,1.7,0,t);box(7,0.4,2.5,M.dark,0.5,1.0,0,t);
+ for(const xx of [-4.6,-1,2.5])for(const s of [-1,1])hcyl(0.5,0.4,M.dark,xx,0.5,s*1.2,"z",t);
+ if(cane){for(let i=0;i<70;i++){const c=hcyl(0.06,6.6,M.caneDry,0.5+(Math.random()-0.5)*0.3,1.4+Math.random()*1.6,(Math.random()-0.5)*2.2,"x",t,5);c.castShadow=false}}else{hcyl(1.1,6.4,M.inox,0.5,2.3,0,"x",t)}}
+function buildPipes(){
+ const P=(a,col)=>pipe(a,0.22,col);
+ P([[-58,7,-4],[-46,7,-4],[-34,7,-10]],M.juice);           // jugo mezclado a clarificación
+ P([[-24,6,-6],[-24,6,10],[-28,6,12]],M.juice);             // jugo a sulfitación
+ P([[-20,6,-12],[-12,6,-12]],M.juice);                       // jugo claro a evaporación
+ P([[10,9,-14],[14,9,-14]],M.juice);                         // meladura a tachos
+ P([[22,6,-6],[22,6,4]],M.orange);                           // masa cocida a centrífugas
+ P([[30,2,9],[38,2,9],[38,2,-6],[44,2,-6]],M.brick);        // miel final a destilería
+ P([[54,7,-10],[62,7,-12],[66,7,-14]],M.juice);               // vino a destilación
+ P([[68,6,-12],[68,6,4]],M.blue);                            // hidratado a tamices
+ P([[70,3,8],[78,3,8]],M.blue);                              // anhidro a tanques
+ P([[66,1.5,-20],[66,1.5,-36],[60,1.5,-40]],M.brick);         // vinaza
+ P([[-38,9,-46],[-40,9,-20],[-46,9,-20]],M.red);             // vapor a molienda/turbinas
+ P([[-13,8,-46],[-13,8,-20],[-6,8,-20],[-6,8,-14]],M.red);   // vapor de escape a evaporación
+}
+
+/* ---------- control ---------- */
+let drag=null;
+function bindInput(){
+ const cv=$("view");
+ addEventListener("keydown",e=>{if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT")return;const k=e.key.toLowerCase();
+  if(k==="escape"){document.querySelectorAll(".ov").forEach(o=>{if(o.id!=="ovLogin")o.hidden=true});return}
+  if(anyOverlay())return;keys[e.code]=true;
+  if(k==="e"&&near)openStation(near);if(k==="t")openTurns();if(k==="h")$("ovHelp").hidden=false;
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault()});
+ addEventListener("keyup",e=>keys[e.code]=false);
+ addEventListener("blur",()=>{for(const k in keys)keys[k]=false});
+ cv.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY,yaw:player.yaw,pitch:player.pitch,moved:0};cv.setPointerCapture(e.pointerId)});
+ cv.addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved=Math.max(drag.moved,Math.abs(dx)+Math.abs(dy));
+  player.yaw=drag.yaw-dx*0.0045;player.pitch=clamp(drag.pitch-dy*0.0035,-1.1,1.1)});
+ cv.addEventListener("pointerup",e=>{if(drag&&drag.moved<6)pick(e);drag=null});
+}
+function anyOverlay(){return [...document.querySelectorAll(".ov")].some(o=>!o.hidden)}
+const ray=new THREE.Raycaster();
+function pick(e){const v=new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(v,camera);
+ const hit=ray.intersectObjects(PICK,true)[0];if(!hit)return;let o=hit.object;while(o&&!o.userData.st)o=o.parent;if(!o)return;
+ const k=o.userData.st;const [x,z]=ST[k].p;if(Math.hypot(player.x-x,player.z-z)-ST[k].r>30){toast("Acércate más a "+ST[k].n+".");return}openStation(k)}
+function goTo(k){const [x,z]=ST[k].p;const [px,pz]=ST[k].vp;player.x=px;player.z=pz;player.yaw=Math.atan2(px-x,pz-z);player.pitch=0.14;lastAct=Date.now()}
+function collides(x,z){return OBST.some(o=>Math.hypot(x-o.x,z-o.z)<o.r+0.6)}
+let near=null;
+function loop(){requestAnimationFrame(loop);const dt=Math.min(0.05,clock.getDelta());
+ if(TEAM&&!anyOverlay()){const sp=(keys.ShiftLeft||keys.ShiftRight)?14:6;let fx=0,fz=0;
+  if(keys.KeyW||keys.ArrowUp)fz-=1;if(keys.KeyS||keys.ArrowDown)fz+=1;if(keys.KeyA)fx-=1;if(keys.KeyD)fx+=1;
+  if(keys.ArrowLeft)player.yaw+=1.8*dt;if(keys.ArrowRight)player.yaw-=1.8*dt;
+  if(fx||fz){const L=Math.hypot(fx,fz);fx/=L;fz/=L;const s=Math.sin(player.yaw),c=Math.cos(player.yaw);
+   const dx=(fx*c+fz*s)*sp*dt,dz=(-fx*s+fz*c)*sp*dt;
+   let nx=clamp(player.x+dx,-92,92),nz=clamp(player.z+dz,-66,60);
+   if(!collides(nx,player.z))player.x=nx;if(!collides(player.x,nz))player.z=nz}}
+ camera.position.set(player.x,1.7,player.z);camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;
+ // estación cercana
+ near=null;let dmin=1e9;for(const k in ST){const [x,z]=ST[k].p;const d=Math.hypot(player.x-x,player.z-z)-ST[k].r;if(d<7&&d<dmin){dmin=d;near=k}}
+ const pr=$("prompt");if(near&&TEAM&&!anyOverlay()){pr.style.display="block";const use=T().inputs.some(i=>i.st===near);pr.innerHTML=`${esc(ST[near].n)} · <kbd>E</kbd> ${use?"fijar variables":"ver equipo"}`}else pr.style.display="none";
+ const tm=performance.now()/1000;for(const k in MARK){const m=MARK[k];if(m.ar.visible){m.ar.position.y=m.h+2.4+Math.sin(tm*3)*0.4;m.ar.rotation.y=tm;m.ring.material.opacity=0.45+0.35*Math.sin(tm*4)}}
+ renderer.render(scene,camera);drawMap();
+}
+function updateMarkers(){if(!started)return;const need=new Set(T().inputs.map(i=>i.st));for(const k in MARK){const on=need.has(k)&&!VISITED.has(k);MARK[k].ring.visible=need.has(k);MARK[k].ar.visible=on;MARK[k].ring.material.color.set(VISITED.has(k)?0xe8a93a:0x7bb342)}}
+/* ---------- minimapa ---------- */
+function drawMap(){const c=$("minimap");if(c.hidden)return;const g=c.getContext("2d"),W=c.width,H=c.height;
+ const sx=x=>(x+96)/192*W,sz=z=>(z+70)/134*H;g.clearRect(0,0,W,H);
+ g.fillStyle="#1b2f22";for(const n of NAVES){g.fillRect(sx(n.x-n.w/2),sz(n.z-n.d/2),n.w/192*W,n.d/134*H)}
+ const need=new Set(T().inputs.map(i=>i.st));
+ for(const k in ST){const [x,z]=ST[k].p;g.beginPath();g.arc(sx(x),sz(z),need.has(k)?9:6,0,7);g.fillStyle=need.has(k)?(VISITED.has(k)?"#e8a93a":"#7bb342"):"#5d6f60";g.fill()}
+ g.font="17px Segoe UI, Arial";g.fillStyle="#cfdacb";for(const k of need){const [x,z]=ST[k].p;g.fillText(ST[k].n.split(" ")[0],sx(x)+11,sz(z)+5)}
+ g.save();g.translate(sx(player.x),sz(player.z));g.rotate(-player.yaw);g.beginPath();g.moveTo(0,-14);g.lineTo(9,9);g.lineTo(0,4);g.lineTo(-9,9);g.closePath();g.fillStyle="#ffffff";g.fill();g.restore()}
+
+/* ---------- tablero de estación ---------- */
+function openStation(k){
+ const t=T();const ins=t.inputs.filter(i=>i.st===k);
+ if(ins.length&&!VISITED.has(k)){VISITED.add(k);updateMarkers();renderPanel()}
+ let h=`<div class="row"><h1 style="flex:1">${esc(ST[k].n)}</h1><button class="ghost" data-close>Cerrar</button></div><p>${esc(ST[k].d)}</p>`;
+ if(ins.length){h+=`<h3>Turno ${CUR}: tablero de control</h3>`;
+  for(const i of ins){const d=decs(i.step);h+=`<div class="field"><label>${esc(i.l)}${i.u?" ("+esc(i.u)+")":""} · rango ${fmt(i.min,d)} a ${fmt(i.max,d)}</label><div class="slider"><input type="range" min="${i.min}" max="${i.max}" step="${i.step}" value="${VARS[i.k]}" data-k="${i.k}"><input type="number" min="${i.min}" max="${i.max}" step="${i.step}" value="${VARS[i.k]}" data-n="${i.k}"></div></div>`}
+  h+=`<p class="hint">Los valores quedan fijados al cerrar el tablero. Visita las demás estaciones del turno y escribe tu predicción en el panel.</p>`}
+ else{const u=stationUse(k);h+=`<div class="msg">En el turno ${CUR} no hay variables que fijar aquí.${u.length?" Este equipo se opera en el turno "+u.join(", ")+".":""}</div>`}
+ $("stCard").innerHTML=h;$("ovStation").hidden=false;
+ $("stCard").querySelector("[data-close]").onclick=()=>$("ovStation").hidden=true;
+ $("stCard").querySelectorAll("[data-k]").forEach(r=>{const n=$("stCard").querySelector(`[data-n="${r.dataset.k}"]`);
+  r.oninput=()=>{VARS[r.dataset.k]=+r.value;n.value=r.value;renderPanel()};
+  n.onchange=()=>{const i=t.inputs.find(x=>x.k===n.dataset.n);let v=clamp(+n.value,i.min,i.max);v=r2(i.min+Math.round((v-i.min)/i.step)*i.step);VARS[i.k]=v;n.value=v;r.value=v;renderPanel()};
+  n.onkeydown=e=>e.stopPropagation()});
+}
+
+/* ===================== PANEL DOCENTE ===================== */
+let DOC={auth:false,tab:"est",rows:[],src:""};
+$("btnDoc").onclick=$("btnDoc2").onclick=()=>{renderDoc();$("ovDoc").hidden=false};
+function renderDoc(){
+ const c=$("docCard");
+ if(!DOC.auth){c.innerHTML=`<div class="row"><h1 style="flex:1">Acceso docente</h1><button class="ghost" data-close>Cerrar</button></div><p>Escribe el código docente de CañaLab.</p><div class="row"><input id="docCode" type="password" autocomplete="off"><button class="pri" id="docGo">Entrar</button></div><div class="msg err" id="docErr" hidden>Código incorrecto.</div>`;
+  c.querySelector("[data-close]").onclick=()=>$("ovDoc").hidden=true;const go=()=>{if($("docCode").value.trim()===DOCENTE_CODE){DOC.auth=true;loadDoc()}else $("docErr").hidden=false};$("docGo").onclick=go;$("docCode").onkeydown=e=>{e.stopPropagation();if(e.key==="Enter")go()};setTimeout(()=>{const d=$("docCode");if(d)d.focus()},50);return}
+ const tabs=[["est","Resumen por estudiante"],["tur","Dificultad por turno"],["lot","Últimos lotes"],["cfg","Precios y turnos"]];
+ let h=`<div class="row"><h1 style="flex:1">Panel docente · CañaLab</h1><button id="dRef">Actualizar</button><button id="dCsv">Exportar CSV</button><button class="ghost" data-close>Cerrar</button></div>
+ <div class="hint">Fuente: ${esc(DOC.src)} · ${DOC.rows.length} registros</div><div class="tabs">${tabs.map(t=>`<button data-tab="${t[0]}" class="${DOC.tab===t[0]?"on":""}">${t[1]}</button>`).join("")}</div>`;
+ if(DOC.tab==="est"){const S=summStudents();h+=tbl(["Código","Nombre","Grupo","Turnos superados","Estrellas","Lotes","Último ingreso","Tiempo activo"],S.map(s=>[s.codigo,s.nombre,s.grupo,s.superados+" / "+NT,s.estrellas+" / "+NT*3,s.lotes,s.ultimo,hms(s.tiempo)]))}
+ if(DOC.tab==="tur"){const D=summTurns();h+=tbl(["Turno","Título","Lotes","Equipos","Con ≥ 1 ★","Con ★★★","Estrellas promedio","Predicción acertada","Intentos para 1 ★"],D.map(d=>[d.turno,d.titulo,d.lotes,d.equipos,d.p1,d.p3,d.prom,d.pred,d.intentos]))}
+ if(DOC.tab==="lot"){const L=DOC.rows.filter(r=>r.tipo==="lote").slice(-60).reverse();h+=tbl(["Fecha","Equipo","Grupo","Turno","Intento","★","Puntos","Predicción","Real","Fallas"],L.map(r=>[fdate(r.fecha),r.equipo,r.grupo,r.turno,r.intento,r.estrellas,r.puntos,fmt(+r.prediccion,sig(+r.valor_real)),fmt(+r.valor_real,sig(+r.valor_real)),String(r.fallas||"").slice(0,90)]))}
+ if(DOC.tab==="cfg"){h+=`<p>Los precios definen las metas de eficiencia de cada turno. Al guardarlos${SHEET_WEBAPP_URL?" se publican en la hoja de CañaLab y los reciben todos los equipos al abrir la aplicación":" quedan en este equipo (configura SHEET_WEBAPP_URL para publicarlos)"}.</p><div class="grid2">`;
+  for(const k in PRICES_DEF)h+=`<div class="field"><label>${esc(PRICES_DEF[k].l)} (${esc(PRICES_DEF[k].u)}) · referencia ${fmt(PRICES_DEF[k].v,0)}</label><input type="number" min="0" step="any" data-pr="${k}" value="${PR[k]}"></div>`;
+  h+=`</div><label class="row" style="margin:10px 0"><input type="checkbox" id="dUnl" ${CFG.desbloquear?"checked":""}> Habilitar todos los turnos</label><div class="row"><button class="pri" id="dSave">Guardar configuración</button><button id="dReset">Restaurar valores de referencia</button></div><div class="msg" id="dMsg" hidden></div>`}
+ h+=`<div class="foot">CañaLab · versión ${VERSION} · Programa de Ingeniería Agroindustrial, Universidad Surcolombiana</div>`;
+ c.innerHTML=h;c.querySelector("[data-close]").onclick=()=>$("ovDoc").hidden=true;
+ c.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{DOC.tab=b.dataset.tab;renderDoc()});
+ $("dRef").onclick=loadDoc;$("dCsv").onclick=exportCSV;
+ c.querySelectorAll("input").forEach(i=>i.onkeydown=e=>e.stopPropagation());
+ if($("dSave")){$("dSave").onclick=()=>saveCfg(false);$("dReset").onclick=()=>saveCfg(true)}
+}
+function tbl(head,rows){return `<div class="tscroll"><table class="dt"><thead><tr>${head.map(x=>`<th>${esc(x)}</th>`).join("")}</tr></thead><tbody>${rows.length?rows.map(r=>`<tr>${r.map(x=>`<td>${esc(x)}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${head.length}">Sin registros todavía.</td></tr>`}</tbody></table></div>`}
+function fdate(s){const d=new Date(s);return isNaN(d)?String(s):d.toLocaleString("es-CO",{dateStyle:"short",timeStyle:"short"})}
+async function loadDoc(){
+ if(SHEET_WEBAPP_URL){DOC.src="Google Sheet «Registro CañaLab»";$("docCard").innerHTML=`<p>Cargando registros…</p>`;
+  try{const r=await fetch(SHEET_WEBAPP_URL+"?tipo=registros&key="+encodeURIComponent(DOCENTE_CODE));const j=await r.json();if(!Array.isArray(j))throw new Error(j.error||"respuesta");DOC.rows=j}
+  catch(e){DOC.rows=store.get("log",[]);DOC.src="este equipo (no se pudo leer la hoja: "+e.message+")"}}
+ else{DOC.rows=store.get("log",[]);DOC.src="este equipo (sin hoja de Google configurada)"}
+ renderDoc()}
+function summStudents(){const M={};
+ for(const r of DOC.rows){for(const s of [1,2]){const cod=String(r["codigo"+s]||"").trim();if(!cod)continue;
+  const m=M[cod]||(M[cod]={codigo:cod,nombre:r["nombre"+s],grupo:r.grupo,best:{},lotes:0,ultimo:"",tiempo:0,_u:0});
+  m.nombre=r["nombre"+s]||m.nombre;m.grupo=r.grupo||m.grupo;const ts=+new Date(r.fecha)||0;if(ts>m._u){m._u=ts;m.ultimo=fdate(r.fecha)}
+  m.tiempo=Math.max(m.tiempo,+r.tiempo_activo_total_s||0);
+  if(r.tipo==="lote"){m.lotes++;const t=+r.turno;m.best[t]=Math.max(m.best[t]||0,+r.estrellas||0)}}}
+ return Object.values(M).map(m=>({...m,superados:Object.values(m.best).filter(x=>x>=1).length,estrellas:Object.values(m.best).reduce((a,b)=>a+b,0)})).sort((a,b)=>String(a.grupo).localeCompare(String(b.grupo))||String(a.nombre).localeCompare(String(b.nombre)))}
+function summTurns(){return TURNS.map(t=>{const L=DOC.rows.filter(r=>r.tipo==="lote"&&+r.turno===t.id);const teams=new Set(L.map(r=>r.codigo1+"+"+r.codigo2));
+ const pct=f=>L.length?fmt(100*L.filter(f).length/L.length,0)+" %":"—";
+ // intentos hasta la primera estrella, por equipo
+ const tries=[];for(const tm of teams){const R=L.filter(r=>r.codigo1+"+"+r.codigo2===tm).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));const i=R.findIndex(r=>+r.estrellas>=1);if(i>=0)tries.push(i+1)}
+ return {turno:t.id,titulo:t.title,lotes:L.length,equipos:teams.size,p1:pct(r=>+r.estrellas>=1),p3:pct(r=>+r.estrellas===3),prom:L.length?fmt(L.reduce((a,r)=>a+(+r.estrellas||0),0)/L.length,2):"—",pred:pct(r=>+r.prediccion_ok===1),intentos:tries.length?fmt(tries.reduce((a,b)=>a+b,0)/tries.length,1):"—"}})}
+function csv(head,rows){const q=v=>{v=v===undefined||v===null?"":String(v);return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};return "﻿"+[head,...rows].map(r=>r.map(q).join(";")).join("\r\n")}
+function dl(name,text){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/csv;charset=utf-8"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function exportCSV(){const d=new Date().toISOString().slice(0,10);const S=summStudents();
+ dl(`canalab_resumen_estudiantes_${d}.csv`,csv(["codigo","nombre","grupo","turnos_superados","estrellas","lotes","ultimo_ingreso","tiempo_activo_s",...TURNS.map(t=>"estrellas_T"+t.id)],S.map(s=>[s.codigo,s.nombre,s.grupo,s.superados,s.estrellas,s.lotes,s.ultimo,s.tiempo,...TURNS.map(t=>s.best[t.id]??"")])));
+ setTimeout(()=>dl(`canalab_dificultad_turnos_${d}.csv`,csv(["turno","titulo","lotes","equipos","con_1_estrella","con_3_estrellas","estrellas_promedio","prediccion_acertada","intentos_para_1_estrella"],summTurns().map(t=>Object.values(t)))),400);
+ setTimeout(()=>dl(`canalab_registros_${d}.csv`,csv(COLS,DOC.rows.map(r=>COLS.map(k=>{const v=r[k];return typeof v==="number"?String(v).replace(".",","):v})))),800)}
+function saveCfg(reset){const pre={};if(!reset)document.querySelectorAll("[data-pr]").forEach(i=>{const v=+i.value;if(isFinite(v)&&v>0)pre[i.dataset.pr]=v});
+ CFG={precios:reset?{}:pre,desbloquear:reset?false:$("dUnl").checked};store.set("config",CFG);applyCfg();if(TEAM)renderPanel();
+ const done=m=>{renderDoc();if($("dMsg")){$("dMsg").hidden=false;$("dMsg").textContent=m}};
+ if(SHEET_WEBAPP_URL){fetch(SHEET_WEBAPP_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({tipo:"config",secret:DOCENTE_CODE,config:CFG})}).then(()=>done("Configuración enviada a la hoja de CañaLab.")).catch(()=>done("No se pudo enviar; quedó guardada en este equipo."))}
+ else done("Configuración guardada en este equipo.")}
+
+</script>
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}</script>
+</body>
+</html>
