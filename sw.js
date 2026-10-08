@@ -1,6 +1,6 @@
 // CañaLab · service worker
 // Al publicar una versión nueva de index.html, cambia CACHE_NAME (por ejemplo, de -F1 a -F2) y VERSION en index.html.
-const CACHE_NAME = "canalab-2026.10.07-F1";
+const CACHE_NAME = "canalab-2026.10.07-F2";
 const CORE = ["./", "index.html", "manifest.json", "icon-192.png", "icon-512.png"];
 const OPTIONAL = ["logo-usco.png"];
 const CDN = [
