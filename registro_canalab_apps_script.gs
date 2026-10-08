@@ -15,7 +15,7 @@ const SECRET = 'CANA-2026';
 
 const COLS = ['fecha','tipo','planta','version','modalidad','equipo','nombre1','codigo1','nombre2','codigo2','grupo',
   'turno','producto','intento','estrellas','puntos','prediccion','valor_real','prediccion_ok','inocuidad_ok','norma_ok',
-  'cliente_ok','eficiencia_ok','fallas','indicador','tiempo_turno_s','tiempo_activo_total_s','tiempo_sesion_s','variables'];
+  'cliente_ok','eficiencia_ok','fallas','costo_kg','tiempo_turno_s','tiempo_activo_total_s','tiempo_sesion_s','variables'];
 
 function hoja_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -24,7 +24,7 @@ function hoja_() {
     sh = ss.insertSheet('registros');
     sh.appendRow(COLS);
     sh.setFrozenRows(1);
-    // fechas y códigos como texto para que Sheets no los transforme
+    // códigos y fechas como texto para que Sheets no los transforme
     sh.getRange('A:A').setNumberFormat('@');
     sh.getRange('H:H').setNumberFormat('@');
     sh.getRange('J:J').setNumberFormat('@');

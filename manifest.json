@@ -1,12 +1,12 @@
 {
   "name": "CañaLab · Planta Virtual de Procesos Agroindustriales",
   "short_name": "CañaLab",
-  "description": "Biorrefinería virtual de caña: molienda, cogeneración, azúcar morena y blanca empacada, y bioetanol anhidro. Programa de Ingeniería Agroindustrial, Universidad Surcolombiana.",
+  "description": "Biorrefinería virtual de caña: azúcar morena y blanca empacada, cogeneración con bagazo y bioetanol anhidro. Programa de Ingeniería Agroindustrial, Universidad Surcolombiana.",
   "lang": "es",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0F1A12",
+  "background_color": "#E2E7D8",
   "theme_color": "#17261A",
   "icons": [
     {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},

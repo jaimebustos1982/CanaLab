@@ -1,17 +1,14 @@
 // CañaLab · service worker
-// Al publicar una versión nueva de index.html, cambia CACHE_NAME (por ejemplo, de -F1 a -F2) y VERSION en index.html.
-const CACHE_NAME = "canalab-2026.10.07-F2";
+// Al publicar una versión nueva de index.html, cambia CACHE_NAME (por ejemplo, de -K1 a -K2) y VERSION en index.html.
+const CACHE_NAME = "canalab-2026.10.07-K1";
 const CORE = ["./", "index.html", "manifest.json", "icon-192.png", "icon-512.png"];
-const OPTIONAL = ["logo-usco.png"];
 const CDN = [
   "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
   "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js",
   "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"
 ];
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(CORE)
-    .then(() => Promise.all(OPTIONAL.map(u => c.add(u).catch(() => {}))))
-    .then(() => Promise.all(CDN.map(u => fetch(u, {mode: "no-cors"}).then(r => c.put(u, r)).catch(() => {}))))));
+  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(CORE).then(() => Promise.all(CDN.map(u => fetch(u, {mode: "no-cors"}).then(r => c.put(u, r)).catch(() => {}))))));
   self.skipWaiting();
 });
 self.addEventListener("activate", e => {

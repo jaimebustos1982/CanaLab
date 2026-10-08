@@ -4,26 +4,24 @@ Planta Virtual de Procesos Agroindustriales · biorrefinería de caña de azúca
 Programa de Ingeniería Agroindustrial, Universidad Surcolombiana.
 Docente: Ing. Jaime Daniel Bustos, D.Sc.
 
-Recorrido 3D en primera persona por un ingenio que muele 400 t de caña por hora. La nave occidental tiene el patio y la molienda; al norte están la caldera de bagazo y el turbogenerador; la casa de cocimiento (clarificación, sulfitación, evaporación, tachos, centrífugas, secado y empaque) ocupa el centro, y al oriente están la destilería y el manejo de vinaza. Dos líneas de producto salen de la misma caña: azúcar morena en bolsa de 1 kg y azúcar blanca en bulto de 50 kg, y etanol anhidro carburante a partir de la miel final, con el bagazo convertido en vapor y energía eléctrica.
+Recorrido 3D en primera persona por una biorrefinería de caña. Al fondo de la nave está la línea de azúcar: patio y tándem de molinos, caldera de bagazo y turbogenerador, clarificación, sulfitación, evaporador de múltiple efecto, tachos al vacío y centrífugas de azúcar blanca y morena. Al frente están la secadora, el empaque (bolsa de 1 kg de morena y bulto de 50 kg de blanca), la línea de bioetanol (fermentadores Melle-Boinot, columnas de destilación y tamices moleculares), el evaporador de vinaza y el laboratorio de calidad.
 
-Doce turnos, calificados contra la norma, la orden del cliente y la eficiencia del proceso:
+Doce turnos que se califican contra la NA 0008:2002 (azúcar crudo, que aquí es la azúcar morena), la NA 0009:2002 (azúcar blanco), el Codex Stan 212-1999 (azúcares), la Resolución 789 de 2016 (etanol anhidro combustible), la Resolución 32209 de 2020 de la SIC (contenido de preempacados), la orden del cliente y la eficiencia del proceso.
 
-| Turno | Proceso | Línea | Referencia normativa |
-|---|---|---|---|
-| 1 | Molienda: preparación e imbibición | Común | Estándar de fábrica |
-| 2 | Cogeneración con bagazo | Común | Estándar de fábrica |
-| 3 | Clarificación del jugo | Común | Estándar de fábrica |
-| 4 | Sulfitación | Azúcar blanca | NA 0009:2002 (SO₂) · Codex Stan 212-1999 (color) |
-| 5 | Evaporación de múltiple efecto | Común | Estándar de fábrica |
-| 6 | Cocimiento en tachos | Azúcar blanca | Estándar de fábrica |
-| 7 | Centrífugas | Morena y blanca | NA 0008:2002 (morena) · Codex Stan 212-1999 (blanca) |
-| 8 | Secado y enfriamiento | Azúcar blanca | NA 0009:2002 (humedad) |
-| 9 | Empaque 1 kg y 50 kg | Morena y blanca | Resolución 32209 de 2020 (SIC), contenido de preempacados |
-| 10 | Fermentación alcohólica | Bioetanol | Estándar de destilería |
-| 11 | Destilación y deshidratación | Bioetanol | Resolución 789 de 2016 (etanol anhidro combustible) |
-| 12 | Vinaza: concentración y fertirriego | Bioetanol | Plan de manejo de suelos |
-
-Los modelos de proceso son didácticos: reproducen las tendencias y los órdenes de magnitud de un ingenio colombiano, pero no son el balance de una planta específica.
+| Turno | Proceso | Producto |
+|---|---|---|
+| 1 | Preparación de caña y molienda | Jugo mezclado |
+| 2 | Cogeneración con bagazo | Vapor y energía |
+| 3 | Encalado, calentamiento y clarificación | Jugo claro |
+| 4 | Sulfitación | Jugo sulfitado (línea blanca) |
+| 5 | Evaporación de múltiple efecto | Meladura |
+| 6 | Cocimiento en tachos | Masa cocida A |
+| 7 | Centrifugación y lavado | Azúcar morena y blanca |
+| 8 | Secado y enfriamiento | Azúcar blanca seca |
+| 9 | Empaque de 1 kg y 50 kg | Azúcar empacada |
+| 10 | Fermentación Melle-Boinot | Vino |
+| 11 | Destilación y deshidratación | Etanol anhidro |
+| 12 | Concentración y fertirriego | Vinaza |
 
 ## Archivos
 
@@ -37,14 +35,12 @@ registro_canalab_apps_script.gs   backend del registro de uso (va en Google Apps
 
 ## Publicar en GitHub Pages (igual que las otras plantas)
 
-1. En GitHub, crea un repositorio nuevo llamado `CanaLab` (público, sin tilde ni eñe para que la dirección sea limpia).
+1. En GitHub, crea un repositorio nuevo llamado `CanaLab` (público, sin eñe para que la dirección sea limpia).
 2. **Add file → Upload files**: sube `index.html`, `manifest.json`, `sw.js`, `icon-192.png` e `icon-512.png`.
 3. **Settings → Pages → Deploy from a branch → main / (root) → Save**.
 4. En uno o dos minutos queda en `https://jaimebustos1982.github.io/CanaLab/`.
 
 En el PC, Chrome o Edge muestran el botón **Instalar** en la barra de direcciones: así queda como aplicación de escritorio, con su ícono, y funciona sin conexión.
-
-**Logo:** la aplicación busca un archivo `logo-usco.png` en el repositorio. Si lo subes junto a los demás archivos, aparece en la barra superior y en la pantalla de ingreso; si no, muestra el distintivo «USCO».
 
 ## Activar el registro central (hoja exclusiva de CañaLab)
 
@@ -57,7 +53,7 @@ Cada Lab tiene su propia Google Sheet. No pegues este script en la hoja de Necta
    - Quién tiene acceso: **Cualquier usuario**.
 4. Autoriza y copia la URL que termina en `/exec`.
 5. En `index.html`, busca `const SHEET_WEBAPP_URL="";` y pega la URL entre las comillas.
-6. Sube de nuevo `index.html`. Cambia la versión en los dos archivos: `VERSION` en `index.html` (de `2026.10.07-F1` a `-F2`) y `CACHE_NAME` en `sw.js` (igual).
+6. Sube de nuevo `index.html`. Cambia la versión en los dos archivos: `VERSION` en `index.html` (de `2026.10.07-K1` a `-K2`) y `CACHE_NAME` en `sw.js` (igual).
 
 Cada vez que edites el Apps Script: **Implementar → Gestionar implementaciones → editar → Nueva versión** (la URL no cambia).
 
@@ -67,10 +63,10 @@ Cada vez que edites el Apps Script: **Implementar → Gestionar implementaciones
 
 ## Qué registra
 
-Cada ingreso, cada lote producido y cada cierre de sesión, con: integrantes y códigos, modalidad, grupo, turno, línea de producto, número de intento, estrellas, puntos, predicción y valor real, resultado por categoría (inocuidad y seguridad, norma, cliente, eficiencia), fallas, indicador de eficiencia, tiempo activo en el turno, tiempo activo total y las variables que fijó el equipo. El tiempo activo solo corre con la ventana visible y actividad en los últimos 2 minutos.
+Cada ingreso, cada lote producido y cada cierre de sesión, con: integrantes y códigos, modalidad, grupo, turno, número de intento, estrellas, puntos, predicción y valor real, resultado por categoría (inocuidad, norma, cliente, eficiencia), fallas, tiempo activo en el turno, tiempo activo total y las variables que fijó el equipo. El tiempo activo solo corre con la ventana visible y actividad en los últimos 2 minutos.
 
 El panel docente muestra el resumen por estudiante (12 turnos, 36 estrellas), la dificultad por turno y los últimos lotes, y exporta tres archivos CSV (separador `;`, abren directo en Excel en español). Desde el panel también se cambian los precios unitarios (azúcar, electricidad comprada y vendida, vapor, bagazo, cal, floculante, azufre, etanol y transporte de vinaza) y se pueden habilitar todos los turnos. Los precios mueven el óptimo económico: por ejemplo, si el bagazo se vende más caro que la energía que genera, en el turno 2 conviene quemar menos.
 
 ## Para verificar que un cambio llegó
 
-El pie del panel docente muestra la versión (`2026.10.07-F1`). Cámbiala en `VERSION` dentro de `index.html` y en `CACHE_NAME` de `sw.js` cada vez que publiques.
+El pie del panel docente muestra la versión (`2026.10.07-K1`). Cámbiala en `VERSION` dentro de `index.html` y en `CACHE_NAME` de `sw.js` cada vez que publiques.
